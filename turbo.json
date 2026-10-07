@@ -1,10 +1,9 @@
 {
-  "$schema": "https://turborepo.dev/schema.json",
+  "$schema": "./node_modules/turbo/schema.json",
   "ui": "tui",
   "globalDependencies": [".env*"],
   "tasks": {
     "generate-routes": {
-      "cache": false,
       "outputs": ["src/routeTree.gen.ts"]
     },
     "build": {
@@ -12,8 +11,11 @@
       "outputs": ["dist/**", ".cache/**", ".tanstack/**", ".output/**"]
     },
     "typegen": {},
+    "typecheck-transit": {
+      "dependsOn": ["^typecheck-transit"]
+    },
     "typecheck": {
-      "dependsOn": ["^typecheck", "generate-routes"]
+      "dependsOn": ["typecheck-transit", "generate-routes"]
     },
     "lint": {
       "dependsOn": ["generate-routes"]
@@ -30,6 +32,13 @@
     "format": {},
     "format:write": {
       "cache": false
+    },
+    "//#format:root": {
+      "inputs": ["*.md", "*.json", ".vscode/*.json"]
+    },
+    "//#format:write:root": {
+      "cache": false,
+      "inputs": ["*.md", "*.json", ".vscode/*.json"]
     },
     "deploy": {
       "cache": false

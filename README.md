@@ -2,14 +2,14 @@
 
 A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable apps, one shared package, and the tooling to keep them consistent. No framework opinions beyond the wiring.
 
-| Workspace       | What it is                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| Workspace       | What it is                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime, holds the whole test suite. |
-| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin. |
-| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.            |
-| `packages/core` | Transport-agnostic logic, plus i18n with one file per language. Imported as TypeScript source.              |
-| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.|
-| `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                   |
+| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.           |
+| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                         |
+| `packages/core` | Transport-agnostic logic, plus i18n with one file per language. Imported as TypeScript source.                        |
+| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                |
+| `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                           |
 
 ## Requirements
 
@@ -40,6 +40,8 @@ bun run lint
 bun run format         # check
 bun run format:write   # fix
 ```
+
+`format` also covers the repository root through a `//#format:root` task, since no package owns `README.md`, `AGENTS.md` or `turbo.json`.
 
 ```sh
 bunx turbo <task> --filter=@acme/tanstack
@@ -106,13 +108,13 @@ packages/<name>/
 
 The tsconfig to extend depends on where it runs:
 
-| Extends                               | For                                                |
-| ------------------------------------- | -------------------------------------------------- |
-| `@acme/tsconfig/source-package.json`  | a library consumed as source, no build             |
-| `@acme/tsconfig/worker.json`          | a Worker, needs `@cloudflare/workers-types`        |
-| `@acme/tsconfig/browser.json`         | browser code with JSX                              |
-| `@acme/tsconfig/node.json`            | Node scripts and config files                      |
-| `@acme/tsconfig/compiled-package.json` | only for a package published to npm                |
+| Extends                                | For                                         |
+| -------------------------------------- | ------------------------------------------- |
+| `@acme/tsconfig/source-package.json`   | a library consumed as source, no build      |
+| `@acme/tsconfig/worker.json`           | a Worker, needs `@cloudflare/workers-types` |
+| `@acme/tsconfig/browser.json`          | browser code with JSX                       |
+| `@acme/tsconfig/node.json`             | Node scripts and config files               |
+| `@acme/tsconfig/compiled-package.json` | only for a package published to npm         |
 
 ## Things that will bite
 
@@ -125,6 +127,7 @@ The tsconfig to extend depends on where it runs:
 - **`~/*` needs two halves.** In `apps/tanstack` it resolves through tsconfig `paths` _and_ `resolve.tsconfigPaths` in `vite.config.ts`. Change one without the other and the failure shows up at build, not at config time.
 - **`wrangler.jsonc` `dev.port` must be a number.** The string form is rejected by `wrangler types`, so `bun run typegen` is where you find out.
 - **Secrets go through `wrangler secret put`,** never `wrangler.jsonc`. Local dev reads the root `.env` through `--env-file ../../.env`.
+- **An env var read at build time has to be in `turbo.json`.** `globalDependencies: [".env*"]` hashes the root `.env` so a change busts the cache; `apps/tanstack` then declares `env: ["TANSTACK_*"]` for the values. Miss either and `turbo build` replays a stale bundle with the old URL still compiled in. `eslint-config-turbo` fails the lint when a variable is read but never declared.
 - **`.gitattributes` forces LF.** Without it a Windows checkout with `core.autocrlf=true` rewrites files as CRLF, prettier's `endOfLine: "lf"` rejects the tree, and `git status` shows changes with no diff.
 - **`bun run clean` runs `git clean -xdf`,** so it only works inside a git checkout.
 
