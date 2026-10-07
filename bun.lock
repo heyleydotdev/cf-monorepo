@@ -87,9 +87,6 @@
     "packages/core": {
       "name": "@acme/core",
       "version": "0.1.0",
-      "dependencies": {
-        "@cloudflare/workers-types": "catalog:",
-      },
       "devDependencies": {
         "@acme/eslint": "workspace:*",
         "@acme/prettier": "workspace:*",

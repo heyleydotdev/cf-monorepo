@@ -7,12 +7,12 @@
       "outputs": ["src/routeTree.gen.ts"]
     },
     "build": {
-      "dependsOn": ["^build", "generate-routes"],
+      "dependsOn": ["generate-routes"],
       "outputs": ["dist/**", ".cache/**", ".tanstack/**", ".output/**"]
     },
     "typegen": {},
     "typecheck": {
-      "dependsOn": ["^build", "^typecheck", "generate-routes"]
+      "dependsOn": ["^typecheck", "generate-routes"]
     },
     "lint": {
       "dependsOn": ["generate-routes"]
