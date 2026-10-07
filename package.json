@@ -1,0 +1,43 @@
+{
+  "name": "cf-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": {
+    "packages": ["apps/*", "packages/*", "tooling/*"],
+    "catalog": {
+      "prettier": "3.9.9",
+      "typescript": "5.9.3",
+      "@types/node": "22.20.3",
+      "eslint": "10.10.0",
+      "react": "19.3.0",
+      "react-dom": "19.3.0",
+      "@types/react": "19.3.0",
+      "@types/react-dom": "19.3.0"
+    }
+  },
+  "scripts": {
+    "dev": "turbo watch dev --continue",
+    "clean": "turbo run clean",
+    "build": "turbo run build",
+    "typegen": "turbo run typegen",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "turbo run format",
+    "format:write": "turbo run format:write"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.2"
+    }
+  },
+  "devDependencies": {
+    "@acme/prettier": "workspace:*",
+    "@ianvs/prettier-plugin-sort-imports": "^4.0.0",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "turbo": "^2.10.13",
+    "typescript": "catalog:"
+  },
+  "prettier": "@acme/prettier"
+}

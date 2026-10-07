@@ -1,0 +1,45 @@
+{
+  "name": "@acme/tanstack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "deploy": "bun run build && wrangler deploy",
+    "generate-routes": "tsr generate",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore"
+  },
+  "dependencies": {
+    "@tanstack/react-devtools": "0.10.13",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-router-devtools": "1.167.2",
+    "@tanstack/react-start": "1.168.60",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/eslint": "workspace:*",
+    "@acme/prettier": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "@cloudflare/vite-plugin": "^1.26.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/devtools-vite": "0.8.5",
+    "@tanstack/router-cli": "^1.132.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "^4.1.18",
+    "typescript": "catalog:",
+    "vite": "^8.0.0",
+    "wrangler": "^4.70.0"
+  },
+  "prettier": "@acme/prettier"
+}

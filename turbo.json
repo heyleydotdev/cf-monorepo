@@ -1,0 +1,37 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "generate-routes": {
+      "cache": false,
+      "outputs": ["src/routeTree.gen.ts"]
+    },
+    "build": {
+      "dependsOn": ["^build", "generate-routes"],
+      "outputs": ["dist/**", ".cache/**", ".tanstack/**", ".output/**"]
+    },
+    "typegen": {},
+    "typecheck": {
+      "dependsOn": ["^build", "^typecheck", "generate-routes"]
+    },
+    "lint": {
+      "dependsOn": ["generate-routes"]
+    },
+    "test": {},
+    "clean": {
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "persistent": false,
+      "cache": false
+    },
+    "format": {},
+    "format:write": {
+      "cache": false
+    },
+    "deploy": {
+      "cache": false
+    }
+  }
+}

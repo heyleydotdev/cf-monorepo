@@ -1,0 +1,35 @@
+{
+  "name": "@acme/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "git clean -xdf dist .cache",
+    "dev": "wrangler dev --env-file ../../.env",
+    "start": "wrangler dev --env-file ../../.env",
+    "deploy": "wrangler deploy",
+    "typegen": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@acme/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@acme/eslint": "workspace:*",
+    "@acme/prettier": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "@cloudflare/workers-types": "^5.20260921.1",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "~4.1.0",
+    "wrangler": "^4"
+  },
+  "prettier": "@acme/prettier"
+}

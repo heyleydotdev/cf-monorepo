@@ -1,0 +1,16 @@
+{
+  "name": "@acme/tsconfig",
+  "private": true,
+  "scripts": {
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format:write": "prettier --write . --ignore-path ../../.gitignore"
+  },
+  "files": [
+    "*.json"
+  ],
+  "devDependencies": {
+    "@acme/prettier": "workspace:*",
+    "prettier": "catalog:"
+  },
+  "prettier": "@acme/prettier"
+}

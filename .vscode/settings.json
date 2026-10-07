@@ -1,0 +1,25 @@
+{
+  "files.associations": {
+    "*.json": "jsonc",
+    "wrangler.json": "jsonc"
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.turbo": true,
+    "**/.cache": true
+  }
+}

@@ -1,0 +1,9 @@
+# Generated routes, router output and framework caches
+src/routeTree.gen.ts
+.tanstack/
+.output/
+.nitro/
+.vinxi/
+__unconfig*
+todos.json
+*.local
