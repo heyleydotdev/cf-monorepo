@@ -69,6 +69,8 @@ bun run deploy         # build, then wrangler deploy
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 
+**Both apps serve the same API.** `packages/api` exports `createApi()`, mounted by `apps/server` at `/api` and by `apps/tanstack` in `src/server.ts`. The TanStack side needs a custom entry because a file route with a `server.handlers` entry cannot claim a prefix: Start skips those handlers when the match consumed a splat param, so `/api/$` never fires.
+
 ## Adding a workspace
 
 Copy `packages/core` for a library, or `apps/server` for a Worker:
