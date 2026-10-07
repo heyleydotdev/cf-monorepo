@@ -84,7 +84,7 @@ One trap in either form: a wildcard in a middle path segment matches nothing, so
 
 **One generated file is ignored, one is committed.** `routeTree.gen.ts` is gitignored and rebuilt by `generate-routes`, which `build`, `lint`, and `typecheck` depend on. `worker-configuration.d.ts` is committed, so a fresh clone typechecks against the bindings it will deploy; re-run `bun run typegen` after editing `wrangler.jsonc`.
 
-**One tsconfig per runtime.** `apps/server` uses a root tsconfig with project references, so app code and tests can carry different `types` while sharing the base. `apps/tanstack` extends one config directly, since a Vite app has a single compilation.
+**One tsconfig per runtime.** Both apps use a root tsconfig with project references and nothing else, so each file is compiled under the types it actually runs with. `apps/server` splits app from test; `apps/tanstack` splits `src` from `vite.config.ts` and the eslint config, which run in Node rather than the browser. `build` runs `tsc -b`, which walks the references.
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 

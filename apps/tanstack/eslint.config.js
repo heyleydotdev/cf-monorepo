@@ -8,13 +8,13 @@ export default defineConfig([
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.json"],
+        project: ["./tsconfig.app.json", "./tsconfig.node.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
       // A route module exports `Route` and keeps its component local, which is
-      // exactly what this rule reports. Off here, on everywhere else.
+      // the rule's localComponents case.
       "react-refresh/only-export-components": "off",
     },
   },
