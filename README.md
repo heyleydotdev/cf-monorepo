@@ -4,8 +4,9 @@ A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable ap
 
 | Workspace       | What it is                                                                                                  |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `apps/server`   | Plain Cloudflare Worker. wrangler config, vitest in the Workers runtime, holds the whole test suite.        |
+| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime, holds the whole test suite. |
 | `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin. |
+| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.            |
 | `packages/core` | Transport-agnostic logic, plus i18n with one file per language. Imported as TypeScript source.              |
 | `tooling/*`     | Shared tsconfig, eslint and prettier configs as `@acme/*` packages.                                         |
 

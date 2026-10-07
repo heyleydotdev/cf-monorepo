@@ -16,7 +16,9 @@
       "name": "@acme/server",
       "version": "0.1.0",
       "dependencies": {
+        "@acme/api": "workspace:*",
         "@acme/core": "workspace:*",
+        "hono": "^4.13.8",
       },
       "devDependencies": {
         "@acme/eslint": "workspace:*",
@@ -60,6 +62,22 @@
         "typescript": "catalog:",
         "vite": "^8.0.0",
         "wrangler": "^4.70.0",
+      },
+    },
+    "packages/api": {
+      "name": "@acme/api",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cloudflare/workers-types": "^5.20260921.1",
+        "hono": "^4.13.8",
+      },
+      "devDependencies": {
+        "@acme/eslint": "workspace:*",
+        "@acme/prettier": "workspace:*",
+        "@acme/tsconfig": "workspace:*",
+        "eslint": "catalog:",
+        "prettier": "catalog:",
+        "typescript": "catalog:",
       },
     },
     "packages/core": {
@@ -120,6 +138,8 @@
     "typescript": "5.9.3",
   },
   "packages": {
+    "@acme/api": ["@acme/api@workspace:packages/api"],
+
     "@acme/core": ["@acme/core@workspace:packages/core"],
 
     "@acme/eslint": ["@acme/eslint@workspace:tooling/eslint"],
@@ -759,6 +779,8 @@
     "hermes-estree": ["hermes-estree@0.25.1", "", {}, "sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw=="],
 
     "hermes-parser": ["hermes-parser@0.25.1", "", { "dependencies": { "hermes-estree": "0.25.1" } }, "sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA=="],
+
+    "hono": ["hono@4.13.13", "", {}, "sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA=="],
 
     "hookified": ["hookified@1.15.1", "", {}, "sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg=="],
 
