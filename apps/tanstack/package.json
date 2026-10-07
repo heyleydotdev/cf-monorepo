@@ -20,7 +20,7 @@
     "@tanstack/react-router": "1.170.41",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/react-start": "1.168.60",
-    "hono": "^4.13.8",
+    "hono": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
@@ -41,7 +41,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "catalog:",
     "vite": "^8.0.0",
-    "wrangler": "^4.70.0"
+    "wrangler": "catalog:"
   },
   "prettier": "@acme/prettier"
 }

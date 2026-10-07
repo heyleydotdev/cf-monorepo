@@ -25,7 +25,7 @@
     "format:write": "prettier --write . --ignore-path ../../.gitignore"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^5.20260921.1"
+    "@cloudflare/workers-types": "catalog:"
   },
   "devDependencies": {
     "@acme/eslint": "workspace:*",
