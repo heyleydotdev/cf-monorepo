@@ -1,9 +1,14 @@
+import path from "node:path";
 import js from "@eslint/js";
-import { defineConfig, globalIgnores } from "eslint/config";
+import turboConfig from "eslint-config-turbo/flat";
+import { defineConfig, includeIgnoreFile } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  includeIgnoreFile(path.join(import.meta.dirname, "../../.gitignore"), {
+    gitignoreResolution: true,
+  }),
+  ...turboConfig,
   {
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],
     extends: [js.configs.recommended, tseslint.configs.recommended],
