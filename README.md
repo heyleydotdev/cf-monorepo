@@ -33,7 +33,7 @@ Every task runs through Turbo, so `--filter` scopes any of them.
 
 ```sh
 bun run dev            # all dev servers, watching
-bun run build          # emit dist/*.d.ts for packages, bundle the app
+bun run build          # bundle the apps; no package emits anything
 bun run typecheck
 bun run test
 bun run lint
@@ -60,7 +60,7 @@ bun run deploy         # build, then wrangler deploy
 
 ## How it fits together
 
-**Packages ship source, not a bundle.** `packages/core` exports `types` from `dist/*.d.ts` and `default` from `src/*.ts`. Consumers bundle the TypeScript themselves; only declarations are built. That is why `typecheck` depends on `^build` in `turbo.json`.
+**Packages ship source, not a build.** Every package maps `types` and `default` at the same `src/*.ts` path, so nothing is compiled and there is no `dist`. `tsc` reads a dependency source directly and the bundler does the rest.
 
 **One dialect of everything.** `tooling/*` are real workspace packages, so a config change lands everywhere on the next install rather than drifting per app. Every workspace sets `"prettier": "@acme/prettier"`.
 
@@ -90,7 +90,7 @@ One trap in either form: a wildcard in a middle path segment matches nothing, so
 
 **Both apps serve the same API.** `packages/api` exports `createApi()`, mounted by `apps/server` at `/api` and by `apps/tanstack` in `src/server.ts`. The TanStack side needs a custom entry because a file route with a `server.handlers` entry cannot claim a prefix: Start skips those handlers when the match consumed a splat param, so `/api/$` never fires.
 
-**The client is typed from the routes.** `AppType` is the type of the concrete `api` const, so `hc<AppType>("/api")` infers paths, methods and response bodies in `apps/tanstack`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` is consumed through `dist/*.d.ts`, which is the project-reference arrangement the docs call for.
+**The client is typed from the routes.** `AppType` is the type of the concrete `api` const, so `hc<AppType>("/api")` infers paths, methods and response bodies in `apps/tanstack`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` resolves to source, so `AppType` carries the route literal straight into the app typecheck.
 
 ## Adding a workspace
 
@@ -99,19 +99,20 @@ Copy `packages/core` for a library, or `apps/server` for a Worker:
 ```
 packages/<name>/
   package.json       "@acme/<name>", private, "type": "module"
-  tsconfig.json      extends @acme/tsconfig/compiled-package.json, include src
+  tsconfig.json      extends @acme/tsconfig/source-package.json, include src
   eslint.config.js   spreads @acme/eslint/base, points parserOptions at tsconfig
   src/index.ts
 ```
 
 The tsconfig to extend depends on where it runs:
 
-| Extends                                | For                                         |
-| -------------------------------------- | ------------------------------------------- |
-| `@acme/tsconfig/compiled-package.json` | a library, declarations only                |
-| `@acme/tsconfig/worker.json`           | a Worker, needs `@cloudflare/workers-types` |
-| `@acme/tsconfig/browser.json`          | browser code with JSX                       |
-| `@acme/tsconfig/node.json`             | Node scripts and config files               |
+| Extends                               | For                                                |
+| ------------------------------------- | -------------------------------------------------- |
+| `@acme/tsconfig/source-package.json`  | a library consumed as source, no build             |
+| `@acme/tsconfig/worker.json`          | a Worker, needs `@cloudflare/workers-types`        |
+| `@acme/tsconfig/browser.json`         | browser code with JSX                              |
+| `@acme/tsconfig/node.json`            | Node scripts and config files                      |
+| `@acme/tsconfig/compiled-package.json` | only for a package published to npm                |
 
 ## Things that will bite
 
