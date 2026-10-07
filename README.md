@@ -8,6 +8,7 @@ A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable ap
 | `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin. |
 | `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.            |
 | `packages/core` | Transport-agnostic logic, plus i18n with one file per language. Imported as TypeScript source.              |
+| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.|
 | `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                   |
 
 ## Requirements
@@ -70,6 +71,16 @@ bun run deploy         # build, then wrangler deploy
 ```
 
 Tailwind emits only the utilities a page actually uses, so an app with no utility classes in it still gets preflight and the tokens, and nothing more.
+
+Tailwind scans from the app root, so classes written inside `packages/*` are invisible and get dropped with no warning. An app declares the packages it renders:
+
+```css
+@source "../../../packages/ui/src";
+```
+
+List them rather than globbing `packages/*/src/*`. A glob works, but a class in a package the app never renders still reaches the output, and two frontends sharing `packages/ui` would each ship CSS for components they do not use. Add a line per package instead.
+
+One trap in either form: a wildcard in a middle path segment matches nothing, so `packages/*/src` looks right and silently scans nothing.
 
 **One generated file is ignored, one is committed.** `routeTree.gen.ts` is gitignored and rebuilt by `generate-routes`, which `build`, `lint`, and `typecheck` depend on. `worker-configuration.d.ts` is committed, so a fresh clone typechecks against the bindings it will deploy; re-run `bun run typegen` after editing `wrangler.jsonc`.
 

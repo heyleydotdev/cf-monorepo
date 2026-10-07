@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Button, Card } from "@acme/ui";
+
 import { apiClient } from "~/lib/api-client";
 
 export const Route = createFileRoute("/")({
@@ -22,10 +24,13 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <main>
-      <pre className="bg-zinc-200 px-4 py-2 text-sm">
-        {Route.useLoaderData()}
-      </pre>
+    <main className="p-8">
+      <Card>
+        <pre className="mt-4 font-mono text-sm text-zinc-500">
+          {Route.useLoaderData()}
+        </pre>
+        <Button className="mt-6">Ping</Button>
+      </Card>
     </main>
   );
 }

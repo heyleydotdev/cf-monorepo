@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@acme/tsconfig/browser.json",
+  "compilerOptions": {
+    /* browser.json asks for vite/client, which belongs to an app. Nothing here
+     * reads import.meta.env or imports an asset, so there is nothing to load. */
+    "types": []
+  },
+  "include": ["src"]
+}
