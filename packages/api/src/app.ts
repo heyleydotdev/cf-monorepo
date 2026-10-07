@@ -1,18 +1,18 @@
 import { Hono } from "hono";
 
 /**
- * The HTTP surface, as a Hono app the host Worker mounts:
- * `app.route("/api", createApi())`. Routes live here so the Worker stays a
- * thin entry point.
+ * The routes, as a Hono app the host mounts:
+ * `app.route("/api", api)`. Routes live here so the Worker stays a thin entry.
  *
- * `Bindings` carries the host Worker's bindings. It is generic because this
- * package cannot know the host's `Env`, so `apps/server` supplies it when it
- * mounts the app.
+ * `api` is a concrete const, not the result of a factory, because `AppType` is
+ * the RPC contract and the client infers paths and response bodies from it. The
+ * path literal in the type has to survive into the emitted declaration, which a
+ * factory return type loses.
  */
-export function createApi<TBindings extends object = Record<string, never>>() {
-  const app = new Hono<{ Bindings: TBindings }>();
+export const api = new Hono().get("/health", (c) => c.json({ ok: true }));
 
-  app.get("/health", (c) => c.json({ ok: true }));
+export type AppType = typeof api;
 
-  return app;
+export function createApi() {
+  return api;
 }

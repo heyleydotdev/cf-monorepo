@@ -17,6 +17,10 @@
       "types": "./dist/app.d.ts",
       "default": "./src/app.ts"
     },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./src/client.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

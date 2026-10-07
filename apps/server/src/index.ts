@@ -8,7 +8,7 @@ import { createApi } from "@acme/api";
  */
 const app = new Hono<{ Bindings: Env }>();
 
-app.route("/api", createApi<Env>());
+app.route("/api", createApi());
 
 export default {
   async fetch(_request, _env, _ctx): Promise<Response> {

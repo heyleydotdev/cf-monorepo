@@ -71,6 +71,8 @@ bun run deploy         # build, then wrangler deploy
 
 **Both apps serve the same API.** `packages/api` exports `createApi()`, mounted by `apps/server` at `/api` and by `apps/tanstack` in `src/server.ts`. The TanStack side needs a custom entry because a file route with a `server.handlers` entry cannot claim a prefix: Start skips those handlers when the match consumed a splat param, so `/api/$` never fires.
 
+**The client is typed from the routes.** `AppType` is the type of the concrete `api` const, so `hc<AppType>("/api")` infers paths, methods and response bodies in `apps/tanstack`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` is consumed through `dist/*.d.ts`, which is the project-reference arrangement the docs call for.
+
 ## Adding a workspace
 
 Copy `packages/core` for a library, or `apps/server` for a Worker:
