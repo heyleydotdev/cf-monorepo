@@ -1,0 +1,9 @@
+@import "@acme/tailwind/theme.css";
+
+body {
+  font-family: var(--font-sans);
+}
+
+pre {
+  font-family: var(--font-mono);
+}

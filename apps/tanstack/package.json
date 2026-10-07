@@ -29,7 +29,8 @@
     "@acme/prettier": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@cloudflare/vite-plugin": "^1.26.0",
-    "@tailwindcss/vite": "^4.1.18",
+    "@acme/tailwind": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-vite": "0.8.5",
     "@tanstack/router-cli": "^1.132.0",
     "@types/node": "catalog:",
@@ -38,7 +39,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tailwindcss": "^4.1.18",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "^8.0.0",
     "wrangler": "catalog:"

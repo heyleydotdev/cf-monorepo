@@ -23,7 +23,9 @@ export const Route = createFileRoute("/")({
 function Home() {
   return (
     <main>
-      <pre>{Route.useLoaderData()}</pre>
+      <pre className="bg-zinc-200 px-4 py-2 text-sm">
+        {Route.useLoaderData()}
+      </pre>
     </main>
   );
 }

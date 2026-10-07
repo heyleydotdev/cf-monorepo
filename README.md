@@ -8,7 +8,7 @@ A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable ap
 | `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin. |
 | `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.            |
 | `packages/core` | Transport-agnostic logic, plus i18n with one file per language. Imported as TypeScript source.              |
-| `tooling/*`     | Shared tsconfig, eslint and prettier configs as `@acme/*` packages.                                         |
+| `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                   |
 
 ## Requirements
 
@@ -62,6 +62,14 @@ bun run deploy         # build, then wrangler deploy
 **Packages ship source, not a bundle.** `packages/core` exports `types` from `dist/*.d.ts` and `default` from `src/*.ts`. Consumers bundle the TypeScript themselves; only declarations are built. That is why `typecheck` depends on `^build` in `turbo.json`.
 
 **One dialect of everything.** `tooling/*` are real workspace packages, so a config change lands everywhere on the next install rather than drifting per app. Every workspace sets `"prettier": "@acme/prettier"`.
+
+**One Tailwind theme.** `tooling/tailwind` exports `theme.css`, which holds the `@import "tailwindcss"` and the `@theme` tokens. An app imports it once and adds only what is specific to that app:
+
+```css
+@import "@acme/tailwind/theme.css";
+```
+
+Tailwind emits only the utilities a page actually uses, so an app with no utility classes in it still gets preflight and the tokens, and nothing more.
 
 **One generated file is ignored, one is committed.** `routeTree.gen.ts` is gitignored and rebuilt by `generate-routes`, which `build`, `lint`, and `typecheck` depend on. `worker-configuration.d.ts` is committed, so a fresh clone typechecks against the bindings it will deploy; re-run `bun run typegen` after editing `wrangler.jsonc`.
 
