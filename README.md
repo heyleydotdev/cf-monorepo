@@ -127,10 +127,11 @@ The tsconfig to extend depends on where it runs:
 - **`~/*` needs two halves.** In `apps/tanstack` it resolves through tsconfig `paths` _and_ `resolve.tsconfigPaths` in `vite.config.ts`. Change one without the other and the failure shows up at build, not at config time.
 - **`wrangler.jsonc` `dev.port` must be a number.** The string form is rejected by `wrangler types`, so `bun run typegen` is where you find out.
 - **Secrets go through `wrangler secret put`,** never `wrangler.jsonc`. Local dev reads the root `.env` through `--env-file ../../.env`.
-- **An env var read at build time has to be in `turbo.json`.** `globalDependencies: [".env*"]` hashes the root `.env` so a change busts the cache; `apps/tanstack` then declares `env: ["TANSTACK_*"]` for the values. Miss either and `turbo build` replays a stale bundle with the old URL still compiled in. `eslint-config-turbo` fails the lint when a variable is read but never declared.
+- **Public env vars use the `VITE_` prefix.** That is Vite's default `envPrefix` and matches what Turbo hashes automatically, so a change busts the cache with no `env` entry to keep in sync. The root `.env` itself is covered by `globalDependencies: [".env*"]`. `eslint-config-turbo` fails the lint when a variable is read but never declared.
+- **`VITE_TANSTACK_BASE_URL` is a build-time constant, not runtime config.** Vite compiles it into the client and server bundles, so a deployed build calls whichever origin was set when it was built. `wrangler secret put` cannot change it; rebuild instead. Nothing validates it at build time yet, so a machine with no `.env` produces a bundle that throws `Invalid URL` on load.
 - **`.gitattributes` forces LF.** Without it a Windows checkout with `core.autocrlf=true` rewrites files as CRLF, prettier's `endOfLine: "lf"` rejects the tree, and `git status` shows changes with no diff.
 - **`bun run clean` runs `git clean -xdf`,** so it only works inside a git checkout.
 
 ## For agents and contributors
 
-`AGENTS.md` holds the conventions an agent should follow: the verify order, the rules on generated files, the alias wiring, and the sharp edges above. Run `bun run format`, then `typecheck`, then `test`, then `lint`. Prettier can break types here, so typecheck right after it.
+`AGENTS.md` holds the conventions an agent should follow: the verify order, the rules on generated files, and the traps that are specific to this setup rather than general. The list above applies to agents too. Run `bun run format`, then `typecheck`, then `test`, then `lint`. Prettier can break types here, so typecheck right after it.

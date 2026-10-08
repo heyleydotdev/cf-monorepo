@@ -8,11 +8,10 @@ import { defineConfig } from "vite";
 export default defineConfig({
   // So Vite resolves the `~/*` alias declared in tsconfig paths.
   resolve: { tsconfigPaths: true },
-  // The shared .env sits at the repo root, not in this app.
+  // The shared .env sits at the repo root, not in this app. envPrefix is left
+  // at the Vite default of VITE_ so vite and turbo agree on which vars are
+  // public without a second list to maintain.
   envDir: "../../",
-  // Vite exposes only VITE_ prefixed vars by default; this app reads
-  // TANSTACK_BASE_URL.
-  envPrefix: ["VITE_", "TANSTACK_"],
   server: {
     host: "0.0.0.0",
     port: 3000,

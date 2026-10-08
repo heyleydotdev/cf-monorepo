@@ -4,9 +4,6 @@
   "tasks": {
     "dev": {
       "persistent": true
-    },
-    "build": {
-      "env": ["TANSTACK_*"]
     }
   }
 }
