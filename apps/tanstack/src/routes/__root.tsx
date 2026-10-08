@@ -2,6 +2,8 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { createTitle } from "@acme/core";
+
 import appCss from "../globals.css?url";
 
 export const Route = createRootRoute({
@@ -9,7 +11,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Acme TanStack" },
+      { title: createTitle("Home") },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

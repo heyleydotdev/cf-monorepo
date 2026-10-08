@@ -48,6 +48,7 @@ Root tasks: `build`, `typecheck`, `lint`, `test`, `format`, `format:write`, `cle
 - Both apps typecheck through project references, so `eslint.config.js` must list every referenced tsconfig in `parserOptions.project`, or eslint reports the file is in no project.
 - `typecheck` waits on `typecheck-transit`, not `^typecheck`. The transit task keeps a package's typecheck hash honest when a dependency changes without serializing packages. Swapping it back makes every app wait on every dependency first.
 - A new public env var needs an `ImportMetaEnv` entry in `apps/tanstack/src/env.d.ts` and nothing in `turbo.json`.
+- The document title is `createTitle(page)` from `@acme/core`, which appends `appName`. A framework name belongs in an app's own files and never in `@acme/core` or `@acme/ui`, since both are shared by every app and would then lie about what a given app runs.
 - Root files are formatted by the `//#format:root` task. A new root file type means a new glob in `turbo.json` and in both `format:root` scripts. The globs skip `bun.lock` and `.env.example` on purpose.
 - `packages/api` exports `api` as a concrete const and `AppType` as `typeof api`. A factory return type loses the route literal and the RPC client infers `unknown`.
 - File and directory names are lowercase kebab-case, except names a tool dictates: `README.md`, `AGENTS.md`, `bun.lock`, `tsconfig.*.json`, `apps/tanstack/src/routes/__root.tsx`, `routeTree.gen.ts`.
