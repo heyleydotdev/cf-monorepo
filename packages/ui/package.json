@@ -21,6 +21,12 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore"
   },
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.7.0"
+  },
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -38,12 +44,6 @@
     "react-dom": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
-  },
-  "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.7.0"
   },
   "prettier": "@acme/prettier"
 }

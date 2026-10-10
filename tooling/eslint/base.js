@@ -10,7 +10,7 @@ export default defineConfig([
   }),
   ...turboConfig,
   {
-    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
+    files: ["**/*.{ts,tsx}"],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -26,7 +26,7 @@ export default defineConfig([
   },
   {
     // Type-aware rules: require parserOptions.project (set per package)
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-misused-promises": [
         "error",

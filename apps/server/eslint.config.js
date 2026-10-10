@@ -6,7 +6,7 @@ export default defineConfig([
   ...base,
   globalIgnores([".wrangler/", "worker-configuration.d.ts"]),
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         project: ["./tsconfig.app.json", "./tsconfig.test.json"],

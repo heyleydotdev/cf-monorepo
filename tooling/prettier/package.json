@@ -1,14 +1,15 @@
 {
   "name": "@acme/prettier",
+  "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "format:write": "prettier --write . --ignore-path ../../.gitignore"
-  },
   "main": "index.cjs",
   "files": [
     "index.cjs"
   ],
+  "scripts": {
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format:write": "prettier --write . --ignore-path ../../.gitignore"
+  },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.0.0",
     "prettier": "catalog:",

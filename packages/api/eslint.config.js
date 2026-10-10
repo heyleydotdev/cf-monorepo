@@ -5,7 +5,7 @@ import base from "@acme/eslint/base";
 export default defineConfig([
   ...base,
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         project: ["./tsconfig.json"],
