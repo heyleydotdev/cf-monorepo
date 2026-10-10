@@ -25,7 +25,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 | Format one workspace | `bunx turbo format --filter=@acme/tanstack`           |
 | Scope any task       | `bunx turbo <task> --filter=@acme/<pkg>`              |
 
-Root tasks: `build`, `typecheck`, `lint`, `test`, `format`, `format:write`, `clean`, `typegen`, `dev`.
+Root tasks: `build`, `typecheck`, `lint`, `test`, `format`, `format:write`, `clean`, `typegen`, `generate`, `dev`.
 
 ## Verify Before Reporting
 

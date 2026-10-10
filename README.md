@@ -9,6 +9,7 @@ A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable ap
 | `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                         |
 | `packages/core` | Transport-agnostic logic, shared helpers with no framework in them. Imported as TypeScript source.                    |
 | `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                |
+| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.  |
 | `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                           |
 
 ## Requirements
