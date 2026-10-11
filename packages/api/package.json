@@ -26,8 +26,12 @@
     "format:write": "prettier --write . --ignore-path ../../.gitignore"
   },
   "dependencies": {
+    "@acme/core": "workspace:*",
+    "@acme/db": "workspace:*",
     "@cloudflare/workers-types": "catalog:",
-    "hono": "^4.13.8"
+    "@hono/zod-validator": "catalog:",
+    "hono": "^4.13.8",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/eslint": "workspace:*",

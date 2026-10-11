@@ -28,10 +28,11 @@
   "devDependencies": {
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
+    "@acme/tailwind": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@acme/ui": "workspace:*",
     "@cloudflare/vite-plugin": "^1.26.0",
-    "@acme/tailwind": "workspace:*",
+    "@cloudflare/workers-types": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-vite": "0.8.5",
     "@tanstack/router-cli": "^1.132.0",

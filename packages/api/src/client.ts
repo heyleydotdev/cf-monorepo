@@ -1,6 +1,6 @@
 import { hc } from "hono/client";
 
-import type { AppType } from "./app";
+import type { ApiType } from "./app";
 
 /**
  * The client type, resolved once at build time rather than on every call site.
@@ -11,8 +11,8 @@ import type { AppType } from "./app";
  * `baseUrl` must be absolute on the server, where a relative URL cannot be
  * fetched. In the browser a relative path is fine.
  */
-export type Client = ReturnType<typeof hc<AppType>>;
+export type Client = ReturnType<typeof hc<ApiType>>;
 
 export function createApiClient(baseUrl = "/api"): Client {
-  return hc<AppType>(baseUrl);
+  return hc<ApiType>(baseUrl);
 }

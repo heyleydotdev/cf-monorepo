@@ -5,6 +5,10 @@
     /* Bundler-only: lets source imports carry a .ts extension */
     "allowImportingTsExtensions": true,
 
+    /* src/server.ts and the api routes it pulls in run on Workers, so the
+       D1Database binding has to resolve here too. */
+    "types": ["vite/client", "@cloudflare/workers-types"],
+
     "paths": {
       "~/*": ["./src/*"]
     }
