@@ -55,6 +55,7 @@
         "@acme/tsconfig": "workspace:*",
         "@acme/ui": "workspace:*",
         "@cloudflare/vite-plugin": "^1.26.0",
+        "@cloudflare/workers-types": "catalog:",
         "@tailwindcss/vite": "catalog:",
         "@tanstack/devtools-vite": "0.8.5",
         "@tanstack/router-cli": "^1.132.0",
@@ -74,8 +75,12 @@
       "name": "@acme/api",
       "version": "0.1.0",
       "dependencies": {
+        "@acme/core": "workspace:*",
+        "@acme/db": "workspace:*",
         "@cloudflare/workers-types": "catalog:",
+        "@hono/zod-validator": "catalog:",
         "hono": "^4.13.8",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@acme/eslint": "workspace:*",
@@ -89,10 +94,15 @@
     "packages/core": {
       "name": "@acme/core",
       "version": "0.1.0",
+      "dependencies": {
+        "@acme/db": "workspace:*",
+        "zod": "catalog:",
+      },
       "devDependencies": {
         "@acme/eslint": "workspace:*",
         "@acme/prettier": "workspace:*",
         "@acme/tsconfig": "workspace:*",
+        "@cloudflare/workers-types": "catalog:",
         "eslint": "catalog:",
         "prettier": "catalog:",
         "typescript": "catalog:",
@@ -196,6 +206,7 @@
   "catalog": {
     "@cloudflare/vitest-plugin": "1.1.12",
     "@cloudflare/workers-types": "5.20260921.1",
+    "@hono/zod-validator": "0.9.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "22.20.3",
     "@types/react": "19.3.0",
@@ -208,6 +219,7 @@
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "wrangler": "4.148.0",
+    "zod": "4.6.5",
   },
   "packages": {
     "@acme/api": ["@acme/api@workspace:packages/api"],
@@ -385,6 +397,8 @@
     "@fontsource-variable/geist": ["@fontsource-variable/geist@5.3.0", "", {}, "sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA=="],
 
     "@fontsource-variable/geist-mono": ["@fontsource-variable/geist-mono@5.3.0", "", {}, "sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw=="],
+
+    "@hono/zod-validator": ["@hono/zod-validator@0.9.1", "", { "peerDependencies": { "hono": ">=4.11.2", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-iiv6w0qrIc0arfvCtUqBWsvl4fXjzaTcQcCJTTtCnkawF9HHGE+KjEl0ox3gQJ6rKZEgE3mLExlQCF72M+mNuw=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.2", "", { "dependencies": { "@humanfs/types": "^0.15.0" } }, "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA=="],
 

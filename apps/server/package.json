@@ -9,6 +9,8 @@
     "start": "wrangler dev --env-file ../../.env",
     "deploy": "wrangler deploy",
     "typegen": "wrangler types",
+    "migrate": "wrangler d1 migrations apply acme-db --local",
+    "migrate:remote": "wrangler d1 migrations apply acme-db --remote",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",

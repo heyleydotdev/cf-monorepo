@@ -14,6 +14,12 @@
     "generate": {
       "cache": false
     },
+    "migrate": {
+      "cache": false
+    },
+    "migrate:remote": {
+      "cache": false
+    },
     "typecheck-transit": {
       "dependsOn": ["^typecheck-transit"]
     },
