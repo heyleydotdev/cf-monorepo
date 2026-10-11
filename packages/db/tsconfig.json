@@ -1,5 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@acme/tsconfig/worker.json",
+  "extends": "@acme/tsconfig/source-package.json",
+  "compilerOptions": {
+    /* Environment: D1Database, which client.ts names in createDb. */
+    "types": ["@cloudflare/workers-types"]
+  },
   "include": ["src"]
 }
