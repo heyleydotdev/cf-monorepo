@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+
+import { Button } from "@acme/ui";
 
 export const Route = createFileRoute("/_app/")({
   component: RouteComponent,
@@ -16,6 +18,9 @@ function RouteComponent() {
           applications on Cloudflare. Start with sensible defaults and shape it
           to fit your stack.
         </p>
+        <Button render={<Link to="/notes" />} className="self-center">
+          Explore the notes example &rsaquo;
+        </Button>
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
 import type { VariantProps } from "class-variance-authority";
-import type { ComponentProps } from "react";
+import { mergeProps, useRender } from "@base-ui/react";
 import { cva } from "class-variance-authority";
 
 import { cn } from "../utils";
 
 const buttonVariants = cva(
-  "ring-border rounded-lg px-3 text-sm/6 font-medium shadow-xs ring-1 transition-colors ring-inset disabled:opacity-60",
+  "ring-border flex items-center justify-center rounded-lg px-3 text-sm/6 font-medium shadow-xs ring-1 transition-colors ring-inset disabled:opacity-60",
   {
     variants: {
       variant: {
@@ -26,14 +26,22 @@ const buttonVariants = cva(
   },
 );
 
-export type ButtonProps = ComponentProps<"button"> &
+export type ButtonProps = useRender.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants>;
 
-export function Button({ variant, size, className, ...props }: ButtonProps) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
+export function Button({
+  variant,
+  size,
+  className,
+  render,
+  ...props
+}: ButtonProps) {
+  return useRender({
+    defaultTagName: "button",
+    render,
+    props: mergeProps<"button">(
+      { className: cn(buttonVariants({ variant, size }), className) },
+      props,
+    ),
+  });
 }
