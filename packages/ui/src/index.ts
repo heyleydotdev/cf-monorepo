@@ -1,5 +1,3 @@
-export { Button, type ButtonProps } from "./button";
-export { Card, type CardProps } from "./card";
 export {
   Header,
   HeaderLinks,
@@ -7,5 +5,20 @@ export {
   type HeaderProps,
   type HeaderLinksProps,
   type HeaderLinkProps,
-} from "./header";
-export { Logo } from "./logo";
+} from "./components/header";
+export { Logo } from "./components/logo";
+export {
+  Input,
+  Textarea,
+  type InputProps,
+  type TextareaProps,
+} from "./components/input";
+export {
+  NoteCard,
+  NoteForm,
+  NotesHeader,
+  NotesList,
+  NotesShell,
+  type NoteFormProps,
+  type NoteItem,
+} from "./components/notes";

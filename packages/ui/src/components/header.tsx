@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { mergeProps, useRender } from "@base-ui/react";
 
-import { cn } from "./utils";
+import { cn } from "../utils";
 
 export type HeaderProps = ComponentProps<"header">;
 
@@ -37,7 +37,7 @@ export function HeaderLink({ render, ...props }: HeaderLinkProps) {
     props: mergeProps<"a">(
       {
         className:
-          "flex h-full items-center px-3 text-sm/6 font-medium text-zinc-900 transition-colors hover:text-zinc-900/60 aria-[current=page]:border-b-2 aria-[current=page]:border-orange-600",
+          "flex h-full items-center border-b-2 border-b-transparent px-3 text-sm/6 font-medium text-zinc-900 transition-colors hover:text-zinc-900/60 aria-[current=page]:border-orange-600",
       },
       props,
     ),
