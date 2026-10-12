@@ -9,19 +9,21 @@
     "preview": "vite preview",
     "deploy": "bun run build && wrangler deploy",
     "generate-routes": "tsr generate",
+    "typegen": "wrangler types",
+    "migrate": "wrangler d1 migrations apply acme-db --local",
+    "migrate:remote": "wrangler d1 migrations apply acme-db --remote",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore"
   },
   "dependencies": {
-    "@acme/api": "workspace:*",
     "@acme/core": "workspace:*",
+    "@acme/db": "workspace:*",
     "@tanstack/react-devtools": "0.10.13",
     "@tanstack/react-router": "1.170.41",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/react-start": "1.168.60",
-    "hono": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

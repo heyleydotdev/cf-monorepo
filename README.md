@@ -91,9 +91,9 @@ One trap in either form: a wildcard in a middle path segment matches nothing, so
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 
-**Both apps serve the same API.** `packages/api` exports `createApi()`, mounted by `apps/server` at `/api` and by `apps/tanstack` in `src/server.ts`. The TanStack side needs a custom entry because a file route with a `server.handlers` entry cannot claim a prefix: Start skips those handlers when the match consumed a splat param, so `/api/$` never fires.
+**Two ways in, one service.** `apps/server` mounts `createApi()` from `packages/api` at `/api` — that is the external HTTP surface. `apps/tanstack` calls the same `@acme/core` service through server functions in `src/lib/notes.ts`, which run inside its own Worker. Mounting Hono in the TanStack app as well would mean a loader fetching its own origin over HTTP, and it used to need a public origin to do it. Neither path can disagree about behaviour, because both validate against the same zod schemas and call the same service.
 
-**The client is typed from the routes.** `ApiType` is the type of the concrete `api` const, so `hc<ApiType>("/api")` infers paths, methods and response bodies in `apps/tanstack`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` resolves to source, so `ApiType` carries the route literal straight into the app typecheck.
+**The HTTP client is typed from the routes.** `ApiType` is the type of the concrete `api` const, so `hc<ApiType>("/api")` infers paths, methods and response bodies for anything talking to `apps/server`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` resolves to source, so `ApiType` carries the route literal straight into the app typecheck. Server functions have no equivalent inference; they are typed by hand against `SelectNote` from `@acme/db/schema`.
 
 ## Adding a workspace
 
@@ -129,7 +129,7 @@ The tsconfig to extend depends on where it runs:
 - **`wrangler.jsonc` `dev.port` must be a number.** The string form is rejected by `wrangler types`, so `bun run typegen` is where you find out.
 - **Secrets go through `wrangler secret put`,** never `wrangler.jsonc`. Local dev reads the root `.env` through `--env-file ../../.env`.
 - **Public env vars use the `VITE_` prefix.** That is Vite's default `envPrefix` and matches what Turbo hashes automatically, so a change busts the cache with no `env` entry to keep in sync. The root `.env` itself is covered by `globalDependencies: [".env*"]`. `eslint-config-turbo` fails the lint when a variable is read but never declared.
-- **`VITE_TANSTACK_BASE_URL` is a build-time constant, not runtime config.** Vite compiles it into the client and server bundles, so a deployed build calls whichever origin was set when it was built. `wrangler secret put` cannot change it; rebuild instead. Nothing validates it at build time yet, so a machine with no `.env` produces a bundle that throws `Invalid URL` on load.
+- **A `VITE_` var cannot hold a URL the Worker needs at request time.** Vite compiles it into both bundles, so a deployed build uses whichever value was set when it was built, and `wrangler secret put` cannot change it. If a server-only value is needed, it is not a Vite var at all: pass it through the Worker or read a binding. A genuinely public one still belongs in `ImportMetaEnv`.
 - **`.gitattributes` forces LF.** Without it a Windows checkout with `core.autocrlf=true` rewrites files as CRLF, prettier's `endOfLine: "lf"` rejects the tree, and `git status` shows changes with no diff.
 - **`bun run clean` runs `git clean -xdf`,** so it only works inside a git checkout.
 

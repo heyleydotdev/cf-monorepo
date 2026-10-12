@@ -13,6 +13,7 @@ function RouteComponent() {
         <Logo />
         <HeaderLinks>
           <HeaderLink render={<Link to="/" />}>Home</HeaderLink>
+          <HeaderLink render={<Link to="/notes" />}>Notes</HeaderLink>
         </HeaderLinks>
       </Header>
       <main className="flex-1">
