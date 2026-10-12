@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@acme/tsconfig/source-package.json",
+  "compilerOptions": {
+    /* Environment: the setup file runs inside the Workers runtime, so it needs
+     * both the Workers globals and the `cloudflare:test` module types that
+     * @cloudflare/vitest-plugin declares.
+     *
+     * `allowImportingTsExtensions` because src/index.ts imports ./d1.ts with a
+     * real extension. A vitest.config.ts is loaded by Node rather than bundled,
+     * so this package is externalized and an extensionless import would not
+     * resolve at all. */
+    "allowImportingTsExtensions": true,
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"]
+  },
+  "include": ["src"]
+}

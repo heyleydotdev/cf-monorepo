@@ -27,12 +27,13 @@
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@acme/vitest": "workspace:*",
     "@cloudflare/vitest-plugin": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
-    "vitest": "~4.1.0",
+    "vitest": "catalog:",
     "wrangler": "catalog:"
   },
   "prettier": "@acme/prettier"

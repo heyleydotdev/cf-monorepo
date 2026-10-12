@@ -1,7 +1,7 @@
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
-import { d1Migrations } from "./test/migrations";
+import { provide, setupFiles } from "@acme/vitest";
 
 export default defineConfig({
   plugins: [
@@ -10,8 +10,9 @@ export default defineConfig({
     }),
   ],
   test: {
-    setupFiles: ["./test/apply-migrations.ts"],
-    // Read in node, consumed in the worker: see test/migrations.ts.
-    provide: { migrations: d1Migrations },
+    // Scoped so a stray spec elsewhere under the app is not swept up.
+    dir: "./test",
+    setupFiles,
+    provide,
   },
 });

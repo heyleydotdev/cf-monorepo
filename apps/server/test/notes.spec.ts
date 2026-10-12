@@ -14,6 +14,19 @@ const post = (body: unknown) =>
 const postNote = async (body: unknown): Promise<{ id: number }> =>
   (await (await post(body)).json()) as { id: number };
 
+/**
+ * An id that is provably not in the table: create a note, then delete it.
+ *
+ * Do not hardcode a sentinel like 999. `notes.id` is AUTOINCREMENT, so ids are
+ * never reused and `DELETE` does not reset the counter; a fixed number is only
+ * unknown until the file has created that many rows.
+ */
+const freeId = async () => {
+  const created = await postNote({ title: "temp" });
+  await api(`/notes/${created.id}`, { method: "DELETE" });
+  return created.id;
+};
+
 beforeEach(async () => {
   await env.DB.prepare("DELETE FROM notes").run();
 });
@@ -72,7 +85,7 @@ describe("GET /api/notes/:id", () => {
   });
 
   it("404s an unknown id", async () => {
-    expect((await api("/notes/999")).status).toBe(404);
+    expect((await api(`/notes/${await freeId()}`)).status).toBe(404);
   });
 
   it("400s a non-numeric id", async () => {
@@ -109,7 +122,7 @@ describe("PATCH /api/notes/:id", () => {
   });
 
   it("404s a patch to a missing note", async () => {
-    expect((await patch(999, { title: "x" })).status).toBe(404);
+    expect((await patch(await freeId(), { title: "x" })).status).toBe(404);
   });
 
   it("still rejects an empty title", async () => {

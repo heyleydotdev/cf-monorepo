@@ -2,5 +2,5 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@acme/tsconfig/worker.json",
   "exclude": ["test"],
-  "include": ["worker-configuration.d.ts", "src/**/*.ts", "vitest.config.ts"]
+  "include": ["worker-configuration.d.ts", "src/**/*.ts"]
 }

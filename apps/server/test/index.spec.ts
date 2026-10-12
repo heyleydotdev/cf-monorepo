@@ -15,7 +15,10 @@ describe("server worker", () => {
     expect(response.status).toBe(404);
   });
 
-  it("sees the generated Env", () => {
-    expect(env).toBeTypeOf("object");
+  it("sees the generated Env", async () => {
+    // The point is the D1 binding wrangler.jsonc declares. A bare
+    // `expect(env).toBeTypeOf("object")` would pass even with no binding.
+    const row = await env.DB.prepare("SELECT 1 AS n").first<{ n: number }>();
+    expect(row?.n).toBe(1);
   });
 });

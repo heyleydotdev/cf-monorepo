@@ -2,19 +2,20 @@
 
 A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable apps sharing one service layer, with a worked notes example touching every layer. No framework opinions beyond the wiring.
 
-| Workspace       | What it is                                                                                                            |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime, holds the whole test suite. |
-| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.           |
-| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                         |
-| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.          |
-| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                |
-| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.  |
-| `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                           |
+| Workspace       | What it is                                                                                                           |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime.                            |
+| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.          |
+| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                        |
+| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.         |
+| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.               |
+| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs. |
+| `tooling/*`     | Shared tsconfig, eslint, prettier, Tailwind theme and vitest harnesses, as `@acme/*` packages.                       |
 
 ## Requirements
 
 - [bun](https://bun.sh) 1.4.2, the only supported package manager
+- Node 22.18 or newer, or bun itself, to run the tests. `@acme/vitest` is imported by each `vitest.config.ts`, which Node loads rather than bundles, so it is read as TypeScript and needs a runtime that strips types.
 - A Cloudflare account, only to deploy. Local dev runs in miniflare.
 
 ## Quick start
@@ -44,16 +45,16 @@ wrangler d1 create acme-db
 
 A worked example of the whole stack, small enough to read in one sitting and delete when it has served its purpose:
 
-| Layer            | File                                          |
-| ---------------- | --------------------------------------------- |
-| Table            | `packages/db/src/schema.ts`                   |
-| Queries          | `packages/core/src/services/notes.service.ts` |
-| Validation       | `packages/core/src/schemas/notes.schema.ts`   |
-| HTTP routes      | `packages/api/src/routes/notes.ts`            |
-| Server functions | `apps/tanstack/src/lib/notes.ts`              |
-| Components       | `packages/ui/src/components/notes.tsx`        |
-| Page             | `apps/tanstack/src/routes/_app/notes.tsx`     |
-| Tests            | `apps/server/test/notes.spec.ts`              |
+| Layer            | File                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| Table            | `packages/db/src/schema.ts`                                             |
+| Queries          | `packages/core/src/services/notes.service.ts`                           |
+| Validation       | `packages/core/src/schemas/notes.schema.ts`                             |
+| HTTP routes      | `packages/api/src/routes/notes.ts`                                      |
+| Server functions | `apps/tanstack/src/lib/notes.ts`                                        |
+| Components       | `packages/ui/src/components/notes.tsx`                                  |
+| Page             | `apps/tanstack/src/routes/_app/notes.tsx`                               |
+| Tests            | `apps/server/test/notes.spec.ts`, `apps/tanstack/test/notes-fn.spec.ts` |
 
 Both frontends reach the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`. Change the service and both change together.
 
