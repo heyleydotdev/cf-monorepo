@@ -22,9 +22,14 @@ export const NoteParam = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+/** A patch addressed by id, for callers that take both in one payload. */
+export const NoteUpdate = NoteParam.extend(NotePatch.shape);
+
 export type NoteInput = z.input<typeof Note>;
 export type NoteOutput = z.output<typeof Note>;
 export type NotePatchInput = z.input<typeof NotePatch>;
 export type NotePatchOutput = z.output<typeof NotePatch>;
 export type NoteParamInput = z.input<typeof NoteParam>;
 export type NoteParamOutput = z.output<typeof NoteParam>;
+export type NoteUpdateInput = z.input<typeof NoteUpdate>;
+export type NoteUpdateOutput = z.output<typeof NoteUpdate>;

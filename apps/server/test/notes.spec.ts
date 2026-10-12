@@ -25,14 +25,14 @@ describe("GET /api/notes", () => {
     expect(await res.json()).toEqual([]);
   });
 
-  it("returns created notes", async () => {
+  it("returns created notes newest first", async () => {
     await post({ title: "first" });
     await post({ title: "second", body: "hello" });
 
     const res = await api("/notes");
     expect(await res.json()).toMatchObject([
-      { title: "first", body: "" },
       { title: "second", body: "hello" },
+      { title: "first", body: "" },
     ]);
   });
 });

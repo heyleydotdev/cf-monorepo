@@ -1,10 +1,16 @@
 import type { Database } from "@acme/db/client";
 import type { InsertNote, SelectNote } from "@acme/db/schema";
 import { notes } from "@acme/db/schema";
-import { eq } from "@acme/db/sql";
+import { desc, eq } from "@acme/db/sql";
 
 export async function listNotes(db: Database): Promise<SelectNote[]> {
-  return db.select().from(notes).all();
+  // Newest first. `id` breaks ties so the order holds when two rows land in the
+  // same millisecond.
+  return db
+    .select()
+    .from(notes)
+    .orderBy(desc(notes.createdAt), desc(notes.id))
+    .all();
 }
 
 export async function getNote(
