@@ -1,13 +1,13 @@
 # Cloudflare Monorepo
 
-A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable apps, one shared package, and the tooling to keep them consistent. No framework opinions beyond the wiring.
+A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable apps sharing one service layer, with a worked notes example touching every layer. No framework opinions beyond the wiring.
 
 | Workspace       | What it is                                                                                                            |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime, holds the whole test suite. |
 | `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.           |
 | `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                         |
-| `packages/core` | Transport-agnostic logic, shared helpers with no framework in them. Imported as TypeScript source.                    |
+| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.          |
 | `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                |
 | `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.  |
 | `tooling/*`     | Shared tsconfig, eslint, prettier and Tailwind theme as `@acme/*` packages.                                           |
@@ -28,6 +28,35 @@ bun run dev              # server on :3001, tanstack on :3000
 
 `bun install` then `bun run typecheck` matters after a fresh clone: packages are consumed as TypeScript source, so the first typecheck is what emits the declaration files dependents resolve types through.
 
+The notes page reads and writes D1 through a server function, so it needs the schema applied once:
+
+```sh
+cd apps/tanstack && bun run migrate
+```
+
+Local D1 needs no Cloudflare account. Deploying does — create the database, then paste its id over the placeholder in `wrangler.jsonc`:
+
+```sh
+wrangler d1 create acme-db
+```
+
+## The notes example
+
+A worked example of the whole stack, small enough to read in one sitting and delete when it has served its purpose:
+
+| Layer            | File                                          |
+| ---------------- | --------------------------------------------- |
+| Table            | `packages/db/src/schema.ts`                   |
+| Queries          | `packages/core/src/services/notes.service.ts` |
+| Validation       | `packages/core/src/schemas/notes.schema.ts`   |
+| HTTP routes      | `packages/api/src/routes/notes.ts`            |
+| Server functions | `apps/tanstack/src/lib/notes.ts`              |
+| Components       | `packages/ui/src/components/notes.tsx`        |
+| Page             | `apps/tanstack/src/routes/_app/notes.tsx`     |
+| Tests            | `apps/server/test/notes.spec.ts`              |
+
+Both frontends reach the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`. Change the service and both change together.
+
 ## Commands
 
 Every task runs through Turbo, so `--filter` scopes any of them.
@@ -40,9 +69,13 @@ bun run test
 bun run lint
 bun run format         # check
 bun run format:write   # fix
+bun run generate       # drizzle-kit generate: schema change -> SQL
+bun run migrate        # apply pending SQL to local D1
 ```
 
 `format` also covers the repository root through a `//#format:root` task, since no package owns `README.md`, `AGENTS.md` or `turbo.json`.
+
+> **Add `--force` when the change is in a shared package.** Turbo hashes a task on that workspace's own files, not on a transitive dependency's source, so editing `packages/*` can replay a stale green result.
 
 ```sh
 bunx turbo <task> --filter=@acme/tanstack
@@ -58,6 +91,8 @@ bun run typegen        # wrangler types -> worker-configuration.d.ts
 bun run deploy         # wrangler deploy
 
 cd apps/tanstack
+bun run typegen
+bun run migrate        # local D1; migrate:remote for the deployed one
 bun run deploy         # build, then wrangler deploy
 ```
 
@@ -85,9 +120,11 @@ List them rather than globbing `packages/*/src/*`. A glob works, but a class in 
 
 One trap in either form: a wildcard in a middle path segment matches nothing, so `packages/*/src` looks right and silently scans nothing.
 
-**One generated file is ignored, one is committed.** `routeTree.gen.ts` is gitignored and rebuilt by `generate-routes`, which `build`, `lint`, and `typecheck` depend on. `worker-configuration.d.ts` is committed, so a fresh clone typechecks against the bindings it will deploy; re-run `bun run typegen` after editing `wrangler.jsonc`.
+**One generated file is ignored, one is committed.** `routeTree.gen.ts` is gitignored and rebuilt by `generate-routes`, which `build`, `lint`, and `typecheck` depend on. Each app's `worker-configuration.d.ts` is committed, so a fresh clone typechecks against the bindings it will deploy; re-run `bun run typegen` after editing that app's `wrangler.jsonc`.
 
 **One tsconfig per runtime.** Both apps use a root tsconfig with project references and nothing else, so each file is compiled under the types it actually runs with. `apps/server` splits app from test; `apps/tanstack` splits `src` from `vite.config.ts` and the eslint config, which run in Node rather than the browser. `build` runs `tsc -b`, which walks the references.
+
+A library that reads a Workers global declares `types` itself rather than switching base config. `packages/api`, `core` and `db` all extend `source-package.json` and override `types: ["@cloudflare/workers-types"]` — reaching for `worker.json` would drag `module: "es2022"` in with it. `worker.json` is for the apps.
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 
@@ -109,19 +146,23 @@ packages/<name>/
 
 The tsconfig to extend depends on where it runs:
 
-| Extends                                | For                                         |
-| -------------------------------------- | ------------------------------------------- |
-| `@acme/tsconfig/source-package.json`   | a library consumed as source, no build      |
-| `@acme/tsconfig/worker.json`           | a Worker, needs `@cloudflare/workers-types` |
-| `@acme/tsconfig/browser.json`          | browser code with JSX                       |
-| `@acme/tsconfig/node.json`             | Node scripts and config files               |
-| `@acme/tsconfig/compiled-package.json` | only for a package published to npm         |
+| Extends                                | For                                    |
+| -------------------------------------- | -------------------------------------- |
+| `@acme/tsconfig/source-package.json`   | a library consumed as source, no build |
+| `@acme/tsconfig/worker.json`           | an app deployed as a Worker            |
+| `@acme/tsconfig/browser.json`          | browser code with JSX                  |
+| `@acme/tsconfig/node.json`             | Node scripts and config files          |
+| `@acme/tsconfig/compiled-package.json` | only for a package published to npm    |
+
+A library that needs a runtime global overrides `types` on top of the neutral base rather than picking a runtime-specific one.
 
 ## Things that will bite
 
 > **`bun run test`, never `bun test`.** Bun's own runner never reads `vitest.config.ts`, so the Workers pool and the `cloudflare:test` imports do not exist and every spec fails to import. Same four letters, different runtime.
 
 > **prettier must stay on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments. `Promise<Response>` becomes `Promise`. `format` reports success, so `typecheck` is what catches it.
+
+> **The two apps keep separate local D1.** Each has its own `.wrangler/state`, so a note created while running `apps/server` is invisible to `apps/tanstack` until deploy, where the shared `database_id` makes them one database. Run `bun run migrate` in whichever app you are working in.
 
 - **Every workspace that runs prettier needs it in its own devDependencies.** Without it the shell falls through to a global install at whatever version happens to be there.
 - **Keep import specifiers extensionless.** A `.ts` or `.js` extension in a source import gets written into the emitted `.d.ts` and breaks dependents. `allowImportingTsExtensions` in `apps/tanstack` is safe there, since nothing consumes its declarations.
@@ -131,6 +172,7 @@ The tsconfig to extend depends on where it runs:
 - **Public env vars use the `VITE_` prefix.** That is Vite's default `envPrefix` and matches what Turbo hashes automatically, so a change busts the cache with no `env` entry to keep in sync. The root `.env` itself is covered by `globalDependencies: [".env*"]`. `eslint-config-turbo` fails the lint when a variable is read but never declared.
 - **A `VITE_` var cannot hold a URL the Worker needs at request time.** Vite compiles it into both bundles, so a deployed build uses whichever value was set when it was built, and `wrangler secret put` cannot change it. If a server-only value is needed, it is not a Vite var at all: pass it through the Worker or read a binding. A genuinely public one still belongs in `ImportMetaEnv`.
 - **`.gitattributes` forces LF.** Without it a Windows checkout with `core.autocrlf=true` rewrites files as CRLF, prettier's `endOfLine: "lf"` rejects the tree, and `git status` shows changes with no diff.
+- **`wrangler types` can emit unused eslint-disable directives** into `worker-configuration.d.ts`. They are warnings, not errors, and regenerating the file brings them back.
 - **`bun run clean` runs `git clean -xdf`,** so it only works inside a git checkout.
 
 ## For agents and contributors
