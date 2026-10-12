@@ -9,7 +9,7 @@ export function Header({ className, ...props }: HeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 isolate flex h-(--header-height) items-center overflow-hidden border-b bg-white max-sm:-mx-(--container-padding) max-sm:px-(--container-padding)",
+        "sticky top-0 isolate flex h-(--header-height) items-center overflow-hidden bg-white max-sm:-mx-(--container-padding) max-sm:px-(--container-padding)",
         className,
       )}
       {...props}
@@ -22,7 +22,10 @@ export type HeaderLinksProps = ComponentProps<"div">;
 export function HeaderLinks({ className, ...props }: HeaderLinksProps) {
   return (
     <div
-      className={cn("flex h-full flex-1 items-center justify-end", className)}
+      className={cn(
+        "flex h-full flex-1 items-center justify-center",
+        className,
+      )}
       {...props}
     />
   );

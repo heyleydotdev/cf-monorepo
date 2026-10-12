@@ -18,7 +18,7 @@ function RouteComponent() {
           applications on Cloudflare. Start with sensible defaults and shape it
           to fit your stack.
         </p>
-        <Button render={<Link to="/notes" />} className="self-center">
+        <Button render={<Link to="/notes" />} className="mt-4 self-center">
           Explore the notes example &rsaquo;
         </Button>
       </div>

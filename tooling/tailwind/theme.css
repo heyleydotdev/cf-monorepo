@@ -6,7 +6,7 @@
   color-scheme: light;
 
   --container-padding: --spacing(4);
-  --header-height: --spacing(12);
+  --header-height: --spacing(14);
 
   @variant sm {
     --container-padding: --spacing(8);
