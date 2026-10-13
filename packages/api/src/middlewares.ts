@@ -4,6 +4,7 @@ import { zValidator as zv } from "@hono/zod-validator";
 import { createMiddleware } from "hono/factory";
 
 import type { Database } from "@acme/db/client";
+import { AppError } from "@acme/core/errors";
 import { createDb } from "@acme/db/client";
 
 import type { APIBindings } from "./env";
@@ -20,9 +21,11 @@ export const zValidator = <
   target: Target,
   schema: T,
 ) =>
-  zv(target, schema, (result, c) => {
+  zv(target, schema, (result) => {
     if (!result.success) {
-      return c.json({ error: result.error.issues }, 400);
+      throw new AppError("VALIDATION", "Invalid input", {
+        issues: result.error.issues,
+      });
     }
   });
 

@@ -1,4 +1,7 @@
 import { Hono } from "hono";
+import { requestId } from "hono/request-id";
+
+import { AppError, isAppError } from "@acme/core/errors";
 
 import type { APIBindings } from "./env";
 import { notesRoutes } from "./routes/notes";
@@ -17,6 +20,25 @@ import { notesRoutes } from "./routes/notes";
  * modules or the app const directly.
  */
 export const api = new Hono<{ Bindings: APIBindings }>()
+  .use(requestId())
+  /**
+   * Turns a thrown `AppError` into its status and body, so a handler states the
+   * failure and never the response shape. Anything else stays a 500: an error
+   * reaching here did not come from the api's own vocabulary, and re-throwing
+   * would reject the Worker's fetch instead of answering the client.
+   */
+  .onError((err, c) => {
+    const requestId = c.get("requestId");
+    const e = isAppError(err)
+      ? err
+      : new AppError("INTERNAL", "Internal Server Error", { cause: err });
+
+    if (e.status >= 500) {
+      console.error({ requestId, err: e, cause: e.cause });
+    }
+
+    return c.json(e.toBody(requestId), e.status);
+  })
   .get("/health", (c) => c.json({ ok: true }))
   .route("/", notesRoutes);
 
