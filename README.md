@@ -1,16 +1,31 @@
+<div align="center">
+
 # Cloudflare Monorepo
 
-A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable apps sharing one service layer, with a worked notes example touching every layer. No framework opinions beyond the wiring.
+A Bun + Turborepo boilerplate for Cloudflare Workers. Two deployable apps sharing one service layer, with a worked notes example that touches every layer.
 
-| Workspace       | What it is                                                                                                           |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime.                            |
-| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.          |
-| `packages/api`  | Hono app factory. The HTTP surface, mounted by `apps/server`.                                                        |
-| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.         |
-| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.               |
-| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs. |
-| `tooling/*`     | Shared tsconfig, eslint, prettier, Tailwind theme and vitest harnesses, as `@acme/*` packages.                       |
+[![Bun](https://img.shields.io/badge/Bun-1.4.2-black?style=flat-square&logo=bun)](https://bun.sh)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22.18-3c873a?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Turborepo](https://img.shields.io/badge/Turborepo-2-ef4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
+
+[Workspaces](#workspaces) • [Quick start](#quick-start) • [The notes example](#the-notes-example) • [Commands](#commands) • [How it fits together](#how-it-fits-together) • [Things that will bite](#things-that-will-bite)
+
+</div>
+
+No framework opinions beyond the wiring. The notes example is here to be deleted, and everything under it — the service layer, the schemas, the D1 setup, the shared tooling — is meant to outlive it.
+
+## Workspaces
+
+| Workspace       | What it is                                                                                                                         |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime.                                          |
+| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                        |
+| `packages/api`  | oRPC router plus the REST and RPC fetch handlers. Mounted by `apps/server` at `/api`, and as RPC by `apps/tanstack` at `/api/rpc`. |
+| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.                       |
+| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                             |
+| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.               |
+| `tooling/*`     | Shared tsconfig, eslint, prettier, Tailwind theme and vitest harnesses, as `@acme/*` packages.                                     |
 
 ## Requirements
 
@@ -21,13 +36,14 @@ A Bun + Turborepo monorepo boilerplate for Cloudflare Workers. Two deployable ap
 ## Quick start
 
 ```sh
-git clone <this-repo> && cd cf-monorepo   # or whatever you cloned it as
+git clone https://github.com/heyleydotdev/cf-monorepo && cd cf-monorepo
 cp .env.example .env     # nothing here is required to boot
 bun install
 bun run dev              # server on :3001, tanstack on :3000
 ```
 
-`bun install` then `bun run typecheck` matters after a fresh clone: packages are consumed as TypeScript source, so the first typecheck is what emits the declaration files dependents resolve types through.
+> [!IMPORTANT]
+> `bun install` then `bun run typecheck` matters after a fresh clone: packages are consumed as TypeScript source, so the first typecheck is what emits the declaration files dependents resolve types through.
 
 The notes page reads and writes D1 through a server function, so it needs the schema applied once:
 
@@ -45,18 +61,19 @@ wrangler d1 create acme-db
 
 A worked example of the whole stack, small enough to read in one sitting and delete when it has served its purpose:
 
-| Layer            | File                                                                    |
-| ---------------- | ----------------------------------------------------------------------- |
-| Table            | `packages/db/src/schema.ts`                                             |
-| Queries          | `packages/core/src/services/notes.service.ts`                           |
-| Validation       | `packages/core/src/schemas/notes.schema.ts`                             |
-| HTTP routes      | `packages/api/src/routes/notes.ts`                                      |
-| Server functions | `apps/tanstack/src/lib/notes.ts`                                        |
-| Components       | `packages/ui/src/components/notes.tsx`                                  |
-| Page             | `apps/tanstack/src/routes/_app/notes.tsx`                               |
-| Tests            | `apps/server/test/notes.spec.ts`, `apps/tanstack/test/notes-fn.spec.ts` |
+| Layer            | File                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| Table            | `packages/db/src/schema.ts`                                  |
+| Queries          | `packages/core/src/services/notes.service.ts`                |
+| Validation       | `packages/core/src/schemas/notes.schema.ts`                  |
+| HTTP routes      | `packages/api/src/routes/notes.ts`                           |
+| RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                      |
+| Server functions | `apps/tanstack/src/lib/notes.ts`                             |
+| Components       | `packages/ui/src/components/notes.tsx`                       |
+| Page             | `apps/tanstack/src/routes/_app/notes.tsx`                    |
+| Tests            | `apps/server/test/*.spec.ts`, `apps/tanstack/test/*.spec.ts` |
 
-Both frontends reach the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`. Change the service and both change together.
+Every path reaches the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`, and callers outside this repo through the same router mounted as RPC at `/api/rpc`. Change the service and they change together.
 
 ## Commands
 
@@ -72,11 +89,14 @@ bun run format         # check
 bun run format:write   # fix
 bun run generate       # drizzle-kit generate: schema change -> SQL
 bun run migrate        # apply pending SQL to local D1
+bun run migrate:remote # apply pending SQL to the deployed D1
+bun run typegen        # wrangler types -> each app's worker-configuration.d.ts
 ```
 
 `format` also covers the repository root through a `//#format:root` task, since no package owns `README.md`, `AGENTS.md` or `turbo.json`.
 
-> **Add `--force` when the change is in a shared package.** Turbo hashes a task on that workspace's own files, not on a transitive dependency's source, so editing `packages/*` can replay a stale green result.
+> [!IMPORTANT]
+> Add `--force` when the change is in a shared package. Turbo hashes a task on that workspace's own files, not on a transitive dependency's source, so editing `packages/*` can replay a stale green result.
 
 ```sh
 bunx turbo <task> --filter=@acme/tanstack
@@ -129,9 +149,9 @@ A library that reads a Workers global declares `types` itself rather than switch
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 
-**Two ways in, one service.** `apps/server` mounts `createApi()` from `packages/api` at `/api` — that is the external HTTP surface. `apps/tanstack` calls the same `@acme/core` service through server functions in `src/lib/notes.ts`, which run inside its own Worker. Mounting Hono in the TanStack app as well would mean a loader fetching its own origin over HTTP, and it used to need a public origin to do it. Neither path can disagree about behaviour, because both validate against the same zod schemas and call the same service.
+**Three ways in, one router.** `apps/server` mounts the `handler` from `packages/api` at `/api` — that is the external HTTP surface, the same procedures served as REST by oRPC's OpenAPI adapter, with paths and methods taken from each procedure's `openapi()` metadata. `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, the same procedures over oRPC's own RPC protocol, for any oRPC client typed by `Router`. That is not what the app itself calls: its loaders use the server functions in `src/lib/notes.ts`, which reach the procedures through `createRouterClient` without a request leaving the Worker, where mounting a handler would mean a loader fetching its own origin over HTTP. No path can disagree about behaviour, because a procedure owns its own validation and every path runs the same procedure — the two handlers even share one `errorStatusMap`, so they cannot disagree about a status either.
 
-**The HTTP client is typed from the routes.** `ApiType` is the type of the concrete `api` const, so `hc<ApiType>("/api")` infers paths, methods and response bodies for anything talking to `apps/server`. Both halves of the monorepo already satisfy what Hono RPC asks for: `strict` is on everywhere, `hono` is one catalog version, and `packages/api` resolves to source, so `ApiType` carries the route literal straight into the app typecheck. Server functions have no equivalent inference; they are typed by hand against `SelectNote` from `@acme/db/schema`.
+**The client is typed from the router.** `router` is a concrete const, so `createRouterClient(router, { context })` infers every procedure's input, output and declared errors. A procedure that does not exist fails to compile, and no call site needs a hand-written type. A factory return type would lose the procedure literals and infer `unknown`, which is why `router` stays a value. The same router generates the OpenAPI document behind the HTTP surface, so the REST description and the typed client cannot drift apart.
 
 ## Adding a workspace
 
@@ -159,15 +179,18 @@ A library that needs a runtime global overrides `types` on top of the neutral ba
 
 ## Things that will bite
 
+> [!WARNING]
 > **`bun run test`, never `bun test`.** Bun's own runner never reads `vitest.config.ts`, so the Workers pool and the `cloudflare:test` imports do not exist and every spec fails to import. Same four letters, different runtime.
 
+> [!CAUTION]
 > **prettier must stay on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments. `Promise<Response>` becomes `Promise`. `format` reports success, so `typecheck` is what catches it.
 
+> [!WARNING]
 > **The two apps keep separate local D1.** Each has its own `.wrangler/state`, so a note created while running `apps/server` is invisible to `apps/tanstack` until deploy, where the shared `database_id` makes them one database. Run `bun run migrate` in whichever app you are working in.
 
 - **Every workspace that runs prettier needs it in its own devDependencies.** Without it the shell falls through to a global install at whatever version happens to be there.
 - **Keep import specifiers extensionless.** A `.ts` or `.js` extension in a source import gets written into the emitted `.d.ts` and breaks dependents. `allowImportingTsExtensions` in `apps/tanstack` is safe there, since nothing consumes its declarations.
-- **`~/*` needs two halves.** In `apps/tanstack` it resolves through tsconfig `paths` _and_ `resolve.tsconfigPaths` in `vite.config.ts`. Change one without the other and the failure shows up at build, not at config time.
+- **`~/*` needs three halves.** In `apps/tanstack` it resolves through tsconfig `paths`, plus `resolve.tsconfigPaths` in _both_ Vite configs — `vite.config.ts` for build and dev, `vitest.config.ts` for tests. Miss the test one and nothing fails until a spec loads a route module through the router, because the specs that import `src/` files directly never resolve it.
 - **`wrangler.jsonc` `dev.port` must be a number.** The string form is rejected by `wrangler types`, so `bun run typegen` is where you find out.
 - **Secrets go through `wrangler secret put`,** never `wrangler.jsonc`. Local dev reads the root `.env` through `--env-file ../../.env`.
 - **Public env vars use the `VITE_` prefix.** That is Vite's default `envPrefix` and matches what Turbo hashes automatically, so a change busts the cache with no `env` entry to keep in sync. The root `.env` itself is covered by `globalDependencies: [".env*"]`. `eslint-config-turbo` fails the lint when a variable is read but never declared.
