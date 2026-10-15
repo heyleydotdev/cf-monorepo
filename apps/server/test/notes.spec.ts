@@ -1,5 +1,5 @@
 import { env, exports } from "cloudflare:workers";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = (path: string, init?: RequestInit) =>
   exports.default.fetch(`https://example.com/api${path}`, init);
@@ -14,13 +14,8 @@ const post = (body: unknown) =>
 const postNote = async (body: unknown): Promise<{ id: number }> =>
   (await (await post(body)).json()) as { id: number };
 
-/**
- * An id that is provably not in the table: create a note, then delete it.
- *
- * Do not hardcode a sentinel like 999. `notes.id` is AUTOINCREMENT, so ids are
- * never reused and `DELETE` does not reset the counter; a fixed number is only
- * unknown until the file has created that many rows.
- */
+// Provably absent: create a note, then delete it. Never hardcode a sentinel —
+// `notes.id` is AUTOINCREMENT, so ids are never reused.
 const freeId = async () => {
   const created = await postNote({ title: "temp" });
   await api(`/notes/${created.id}`, { method: "DELETE" });
@@ -65,9 +60,14 @@ describe("POST /api/notes", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects an empty title", async () => {
+  it("rejects an empty title, naming the field", async () => {
     const res = await post({ title: "" });
     expect(res.status).toBe(400);
+    // Shaped on the way out; see `shapeInputErrors` in packages/api/src/context.ts.
+    expect(await res.json()).toMatchObject({
+      code: "INPUT_VALIDATION_FAILED",
+      data: { fieldErrors: { title: ["title is required"] } },
+    });
   });
 
   it("rejects a wrong-typed field", async () => {
@@ -150,5 +150,35 @@ describe("DELETE /api/notes/:id", () => {
     expect(
       (await api(`/notes/${created.id}`, { method: "DELETE" })).status,
     ).toBe(404);
+  });
+});
+
+describe("unexpected errors", () => {
+  it("500s without naming the failure", async () => {
+    // Quiet the expected crash; the tanstack spec is where the log is asserted.
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // A real D1 failure rather than a stub, on the surface that is actually public.
+    await env.DB.prepare("ALTER TABLE notes RENAME TO notes_hidden").run();
+
+    try {
+      const res = await api("/notes");
+      const body = (await res.json()) as {
+        defined: boolean;
+        code: string;
+        message: string;
+      };
+
+      expect(res.status).toBe(500);
+      // No table name, no driver wording, nothing else alongside it.
+      expect(body).toEqual({
+        defined: false,
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Something went wrong",
+      });
+    } finally {
+      await env.DB.prepare("ALTER TABLE notes_hidden RENAME TO notes").run();
+      logged.mockRestore();
+    }
   });
 });

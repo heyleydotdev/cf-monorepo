@@ -1,16 +1,18 @@
-import { Hono } from "hono";
+import { handler } from "@acme/api";
 
-import type { APIAssertBindings, APIBindings } from "@acme/api";
-import { createApi } from "@acme/api";
-
-// Compile-time only: fails here if wrangler types a binding the API reads that
-// this Worker does not bind. The underscore keeps lint quiet, since it is unused.
-type _CheckBindings = APIAssertBindings<Env, APIBindings>;
-
-const app = new Hono<{ Bindings: Env }>();
-
-app.route("/api", createApi());
-
+/** The API is a fetch handler, so the Worker exports it directly. */
 export default {
-  fetch: app.fetch,
+  fetch: async (request, env) => {
+    const { matched, response } = await handler.handle(request, {
+      context: {
+        Env: { DB: env.DB },
+      },
+    });
+
+    if (matched) {
+      return response;
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
 } satisfies ExportedHandler<Env>;

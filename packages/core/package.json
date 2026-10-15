@@ -9,10 +9,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./errors": {
-      "types": "./src/errors.ts",
-      "default": "./src/errors.ts"
-    },
     "./notes": {
       "types": "./src/services/notes.service.ts",
       "default": "./src/services/notes.service.ts"

@@ -9,13 +9,13 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./app": {
-      "types": "./src/app.ts",
-      "default": "./src/app.ts"
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
     },
-    "./client": {
-      "types": "./src/client.ts",
-      "default": "./src/client.ts"
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./src/errors.ts"
     },
     "./package.json": "./package.json"
   },
@@ -28,15 +28,15 @@
   "dependencies": {
     "@acme/core": "workspace:*",
     "@acme/db": "workspace:*",
-    "@cloudflare/workers-types": "catalog:",
-    "@hono/zod-validator": "catalog:",
-    "hono": "^4.13.8",
+    "@orpc/openapi": "2.0.0-beta.43",
+    "@orpc/server": "2.0.0-beta.43",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@cloudflare/workers-types": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"

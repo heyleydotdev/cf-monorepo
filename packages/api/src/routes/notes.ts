@@ -1,6 +1,5 @@
-import { Hono } from "hono";
+import { openapi } from "@orpc/openapi";
 
-import { AppError } from "@acme/core/errors";
 import {
   createNote,
   deleteNote,
@@ -8,66 +7,64 @@ import {
   listNotes,
   updateNote,
 } from "@acme/core/notes";
-import { Note, NoteParam, NotePatch } from "@acme/core/notes.schema";
+import { Note, NoteParam, NoteUpdate } from "@acme/core/notes.schema";
 
-import type { APIBindings } from "../env";
-import { dbMiddleware, zValidator } from "../middlewares";
+import { procedure } from "../context";
+import { NOTE_NOT_FOUND } from "../errors";
 
-export const notesRoutes = new Hono<{ Bindings: APIBindings }>()
-  .get("/notes", dbMiddleware, async (c) => {
-    const notes = await listNotes(c.get("db"));
+const wErrors = procedure.errors({ [NOTE_NOT_FOUND.code]: NOTE_NOT_FOUND });
 
-    return c.json(notes);
-  })
-  .get(
-    "/notes/:id",
-    dbMiddleware,
-    zValidator("param", NoteParam),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const note = await getNote(c.get("db"), id);
+/**
+ * Paths come from `openapi()` metadata, not the router shape; a `{id}` path needs
+ * `id` in the input schema to bind.
+ */
+export const notes = {
+  list: procedure
+    .meta(openapi({ method: "GET", path: "/notes" }))
+    .handler(({ context }) => listNotes(context.db)),
 
-      if (!note) {
-        throw new AppError("NOT_FOUND", "Note not found");
-      }
-
-      return c.json(note);
-    },
-  )
-  .post("/notes", dbMiddleware, zValidator("json", Note), async (c) => {
-    const { title, body } = c.req.valid("json");
-    const note = await createNote(c.get("db"), { title, body });
-
-    return c.json(note, 201);
-  })
-  .patch(
-    "/notes/:id",
-    dbMiddleware,
-    zValidator("param", NoteParam),
-    zValidator("json", NotePatch),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const note = await updateNote(c.get("db"), id, c.req.valid("json"));
+  get: wErrors
+    .meta(openapi({ method: "GET", path: "/notes/{id}" }))
+    .input(NoteParam)
+    .handler(async ({ context, errors, input }) => {
+      const note = await getNote(context.db, input.id);
 
       if (!note) {
-        throw new AppError("NOT_FOUND", "Note not found");
+        throw errors.NOTE_NOT_FOUND();
       }
 
-      return c.json(note);
-    },
-  )
-  .delete(
-    "/notes/:id",
-    dbMiddleware,
-    zValidator("param", NoteParam),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const deleted = await deleteNote(c.get("db"), id);
+      return note;
+    }),
+
+  create: procedure
+    .meta(openapi({ method: "POST", path: "/notes", successStatus: 201 }))
+    .input(Note)
+    .handler(({ context, input }) => createNote(context.db, input)),
+
+  update: wErrors
+    .meta(openapi({ method: "PATCH", path: "/notes/{id}" }))
+    .input(NoteUpdate)
+    .handler(async ({ context, errors, input }) => {
+      const { id, ...patch } = input;
+      const note = await updateNote(context.db, id, patch);
+
+      if (!note) {
+        throw errors.NOTE_NOT_FOUND();
+      }
+
+      return note;
+    }),
+
+  remove: wErrors
+    .meta(openapi({ method: "DELETE", path: "/notes/{id}" }))
+    .input(NoteParam)
+    .handler(async ({ context, errors, input }) => {
+      const deleted = await deleteNote(context.db, input.id);
 
       if (!deleted) {
-        throw new AppError("NOT_FOUND", "Note not found");
+        throw errors.NOTE_NOT_FOUND();
       }
 
-      return c.json({ ok: true });
-    },
-  );
+      return { ok: true };
+    }),
+};

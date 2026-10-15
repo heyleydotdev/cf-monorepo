@@ -1,46 +1,39 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 
-import {
-  createNote,
-  deleteNote,
-  getNote,
-  listNotes,
-  updateNote,
-} from "@acme/core/notes";
-import { Note, NoteParam, NoteUpdate } from "@acme/core/notes.schema";
-import { createDb } from "@acme/db/client";
+import type {
+  NoteInput,
+  NoteParamInput,
+  NoteUpdateInput,
+} from "@acme/core/notes.schema";
+import { createApiClient } from "@acme/api/server";
 
 /**
- * The notes api, as server functions. A loader calls these directly in the
- * Worker, so a request never leaves the isolate to reach its own origin.
- *
- * The external HTTP surface is still `createApi` from @acme/api, mounted by
- * apps/server. These are the internal path, and they reach the same
- * @acme/core service, so the two cannot disagree about behaviour.
- *
- * Validation runs here rather than in the service: the api package still
- * validates at its edge with zValidator, and a server function is that edge for
- * this app.
+ * The notes api as server functions. The validators are pass-throughs — Start has
+ * none that only types `data` — so validation stays in the procedure; they take
+ * the schema's *input* side, where `id` is still a string.
  */
-const db = () => createDb(env.DB);
+
+// Read inside the handlers, never at module scope: `cloudflare:workers` does not
+// resolve in the client half of the bundle.
+const api = () => createApiClient({ Env: { DB: env.DB } });
 
 export const listNotesFn = createServerFn({ method: "GET" }).handler(() =>
-  listNotes(db()),
+  api().notes.list(),
 );
 
 export const getNoteFn = createServerFn({ method: "GET" })
-  .validator(NoteParam)
-  .handler(({ data }) => getNote(db(), data.id));
+  .validator((data: NoteParamInput) => data)
+  .handler(({ data }) => api().notes.get(data));
 
 export const createNoteFn = createServerFn({ method: "POST" })
-  .validator(Note)
-  .handler(({ data }) => createNote(db(), data));
+  .validator((data: NoteInput) => data)
+  .handler(({ data }) => api().notes.create(data));
 
 export const updateNoteFn = createServerFn({ method: "POST" })
-  .validator(NoteUpdate)
-  .handler(({ data: { id, ...patch } }) => updateNote(db(), id, patch));
+  .validator((data: NoteUpdateInput) => data)
+  .handler(({ data }) => api().notes.update(data));
 
 export const deleteNoteFn = createServerFn({ method: "POST" })
-  .validator(NoteParam)
-  .handler(({ data }) => deleteNote(db(), data.id));
+  .validator((data: NoteParamInput) => data)
+  .handler(({ data }) => api().notes.remove(data));
