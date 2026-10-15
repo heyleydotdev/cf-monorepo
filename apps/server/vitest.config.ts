@@ -1,7 +1,7 @@
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
-import { provide, setupFiles } from "@acme/vitest";
+import { provide, setupFiles, testTimeout } from "@acme/vitest";
 
 export default defineConfig({
   plugins: [
@@ -12,6 +12,7 @@ export default defineConfig({
   test: {
     // Scoped so a stray spec elsewhere under the app is not swept up.
     dir: "./test",
+    testTimeout,
     setupFiles,
     provide,
   },
