@@ -32,7 +32,6 @@
   "devDependencies": {
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
-    "@acme/tailwind": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@acme/ui": "workspace:*",
     "@acme/vitest": "workspace:*",

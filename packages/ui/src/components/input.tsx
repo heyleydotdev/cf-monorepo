@@ -1,14 +1,14 @@
-import type { ComponentProps } from "react";
+import * as React from "react";
+import { Input as InputPrimitive } from "@base-ui/react/input";
+import { cn } from "cn";
 
-import { cn } from "../utils";
-
-export type InputProps = ComponentProps<"input">;
-
-export function Input({ className, ...props }: InputProps) {
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
-    <input
+    <InputPrimitive
+      type={type}
+      data-slot="input"
       className={cn(
-        "outline-border w-full rounded-md border-0 bg-white px-2.5 py-1 text-sm/6 text-zinc-900 outline-1 transition placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-orange-500 disabled:opacity-60",
+        "border-input file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 disabled:bg-input/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 h-8 w-full min-w-0 rounded-none border bg-transparent px-2.5 py-1 text-xs transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-xs file:font-medium focus-visible:ring-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-1 md:text-xs",
         className,
       )}
       {...props}
@@ -16,16 +16,4 @@ export function Input({ className, ...props }: InputProps) {
   );
 }
 
-export type TextareaProps = ComponentProps<"textarea">;
-
-export function Textarea({ className, ...props }: TextareaProps) {
-  return (
-    <textarea
-      className={cn(
-        "outline-border min-h-24 w-full resize-y rounded-md border-0 bg-white px-2.5 py-1 text-sm/6 text-zinc-900 outline-1 transition placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-orange-500 disabled:opacity-60",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+export { Input };

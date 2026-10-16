@@ -1,7 +1,3 @@
-import type { ClassValue } from "clsx";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: Array<ClassValue>) {
-  return twMerge(clsx(inputs));
-}
+// The archived components in `__components` still import this path. New code
+// uses `lib/utils`. Both go away together.
+export { cn } from "./lib/utils";

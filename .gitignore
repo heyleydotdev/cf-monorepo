@@ -51,6 +51,9 @@ pnpm-debug.log*
 .tanstack/
 apps/tanstack/src/routeTree.gen.ts
 
+# Archived UI components (kept on disk, never committed)
+packages/ui/src/__components/
+
 # Editors & OS
 .vscode/*
 !.vscode/extensions.json

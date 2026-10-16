@@ -12,5 +12,10 @@ export default defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      // shadcn exports each component's cva variants beside the component so a
+      // consumer can compose them, which is the rule's non-component-export case.
+      "react-refresh/only-export-components": "off",
+    },
   },
 ]);

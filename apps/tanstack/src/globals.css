@@ -1,8 +1,9 @@
-@import "@acme/tailwind/theme.css";
+@import "@acme/ui/globals.css";
 
 /*
- * Tailwind scans from the app root, so classes written in a workspace package
- * are invisible and get dropped with no warning. Relative to this file.
+ * Tailwind scans from the directory of the CSS file that imports it, so classes
+ * written in a workspace package are invisible and get dropped with no warning.
+ * Relative to this file.
  *
  * Each package is listed rather than globbed. A glob over packages/* works,
  * but a class in a package this app does not render still reaches the output,
