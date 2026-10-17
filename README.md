@@ -23,9 +23,9 @@ No framework opinions beyond the wiring. The notes example is here to be deleted
 | `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                        |
 | `packages/api`  | oRPC router plus the REST and RPC fetch handlers. Mounted by `apps/server` at `/api`, and as RPC by `apps/tanstack` at `/api/rpc`. |
 | `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.                       |
-| `packages/ui`   | React components with React as a peer dependency. Peer rather than bundled, so the app supplies React.                             |
+| `packages/ui`   | React components plus the Tailwind theme. React is a peer dependency rather than bundled, so the app supplies React.               |
 | `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.               |
-| `tooling/*`     | Shared tsconfig, eslint, prettier, Tailwind theme and vitest harnesses, as `@acme/*` packages.                                     |
+| `tooling/*`     | Shared tsconfig, eslint, prettier and vitest harnesses, as `@acme/*` packages.                                                     |
 
 ## Requirements
 
@@ -69,8 +69,8 @@ A worked example of the whole stack, small enough to read in one sitting and del
 | HTTP routes      | `packages/api/src/routes/notes.ts`                           |
 | RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                      |
 | Server functions | `apps/tanstack/src/lib/notes.ts`                             |
-| Components       | `packages/ui/src/components/notes.tsx`                       |
-| Page             | `apps/tanstack/src/routes/_app/notes.tsx`                    |
+| Components       | `packages/ui/src/components/*.tsx` (shadcn)                  |
+| Page             | `apps/tanstack/src/routes/index.tsx`                         |
 | Tests            | `apps/server/test/*.spec.ts`, `apps/tanstack/test/*.spec.ts` |
 
 Every path reaches the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`, and callers outside this repo through the same router mounted as RPC at `/api/rpc`. Change the service and they change together.
@@ -123,10 +123,10 @@ bun run deploy         # build, then wrangler deploy
 
 **One dialect of everything.** `tooling/*` are real workspace packages, so a config change lands everywhere on the next install rather than drifting per app. Every workspace sets `"prettier": "@acme/prettier"`.
 
-**One Tailwind theme.** `tooling/tailwind` exports `theme.css`, which holds the `@import "tailwindcss"` and the `@theme` tokens. An app imports it once and adds only what is specific to that app:
+**One Tailwind theme.** `packages/ui` exports `globals.css`, which holds the `@import "tailwindcss"` and the `@theme` tokens alongside the components that consume them. An app imports it once and adds only what is specific to that app:
 
 ```css
-@import "@acme/tailwind/theme.css";
+@import "@acme/ui/globals.css";
 ```
 
 Tailwind emits only the utilities a page actually uses, so an app with no utility classes in it still gets preflight and the tokens, and nothing more.
