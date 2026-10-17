@@ -1,28 +1,34 @@
 import * as z from "zod";
 
 export const Note = z.object({
-  title: z.string().min(1, "title is required").max(200),
-  body: z.string().max(10_000).default(""),
+  title: z
+    .string({
+      error: (issue) =>
+        issue.input === undefined ? "Title is required" : "Title must be text",
+    })
+    .min(1, "Title is required")
+    .max(200, "Title can be at most 200 characters"),
+  body: z
+    .string({ error: "Body must be text" })
+    .max(10_000, "Body can be at most 10,000 characters")
+    .default(""),
 });
 
-/**
- * A patch must not carry `Note`'s defaults. `.partial()` makes a field optional
- * but keeps its `.default("")`, so patching only `title` would validate `body`
- * to `""` and wipe what was stored. The fields are restated rather than reused:
- * `Note.shape.body.optional()` still runs the default before `.optional()` sees
- * it. Every field stays absent unless the client sent it, and drizzle then omits
- * the column from the UPDATE.
- */
 export const NotePatch = z.object({
   title: Note.shape.title,
-  body: z.string().max(10_000).optional(),
+  body: z
+    .string({ error: "Body must be text" })
+    .max(10_000, "Body can be at most 10,000 characters")
+    .optional(),
 });
 
 export const NoteParam = z.object({
-  id: z.coerce.number().int().positive(),
+  id: z.coerce
+    .number({ error: "Note id must be a positive integer" })
+    .int()
+    .positive(),
 });
 
-/** A patch addressed by id, for callers that take both in one payload. */
 export const NoteUpdate = NoteParam.extend(NotePatch.shape);
 
 export type NoteInput = z.input<typeof Note>;
