@@ -42,7 +42,7 @@ const errorHandler = base.middleware(async ({ next, path }) => {
 
       throw new INPUT_VALIDATION_FAILED({
         message: z.prettifyError(issues),
-        data: z.flattenError(issues),
+        data: z.flattenError(issues, (issue) => ({ message: issue.message })),
         cause: issues,
       });
     }

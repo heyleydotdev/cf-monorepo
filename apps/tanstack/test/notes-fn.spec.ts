@@ -28,10 +28,17 @@ const call = {
 
 /**
  * Assertions use the API's factories, whose `instanceof` compares codes, not classes.
+ * `createNoteFn` is the one wrapped in `safeCall`, so its failures arrive as a value.
  */
 
 async function seed(data: NoteInput): Promise<Created> {
-  return (await call.create(data)) as Created;
+  const res = await call.create(data);
+
+  if (res.status !== "ok") {
+    throw new Error(`seed failed: ${res.status}`);
+  }
+
+  return res.data;
 }
 
 // Provably absent: create a note, then delete it. Never hardcode a sentinel —
@@ -72,26 +79,24 @@ describe("createNoteFn", () => {
 
   it("rejects a missing title", async () => {
     // Bypasses the input type on purpose: proving the schema rejects this is the case.
-    await expect(
-      call.create({ body: "orphan" } as NoteInput),
-    ).rejects.toBeInstanceOf(INPUT_VALIDATION_FAILED);
+    const res = await call.create({ body: "orphan" } as NoteInput);
+    expect(res.status).toBe("invalid");
   });
 
   it("rejects an empty title, naming the field", async () => {
-    const rejection = call.create({ title: "" });
-
-    await expect(rejection).rejects.toBeInstanceOf(INPUT_VALIDATION_FAILED);
-
-    // Shaped by `shapeInputErrors`, so the field is addressable, not just prose.
-    await expect(rejection).rejects.toHaveProperty("data.fieldErrors.title", [
-      "title is required",
-    ]);
+    // `issues` is the API's own payload, so the field is addressable, not just prose.
+    expect(await call.create({ title: "" })).toMatchObject({
+      status: "invalid",
+      issues: { fieldErrors: { title: [{ message: "Title is required" }] } },
+    });
   });
 
   it("rejects a wrong-typed field", async () => {
-    await expect(
-      call.create({ title: "ok", body: 5 as unknown as string }),
-    ).rejects.toBeInstanceOf(INPUT_VALIDATION_FAILED);
+    const res = await call.create({
+      title: "ok",
+      body: 5 as unknown as string,
+    });
+    expect(res.status).toBe("invalid");
   });
 });
 
@@ -185,12 +190,31 @@ describe("unexpected errors", () => {
       );
 
       // Not the table name, not the driver's wording: anything that is not an
-      // ORPCError becomes a fixed 500 in `errorHandler`. This is the path that
-      // reaches the browser, where notes.tsx renders `cause.message`.
+      // ORPCError becomes a fixed 500 in `errorHandler`, and the message is all
+      // that survives the server-fn boundary.
       expect(message).toBe("Something went wrong");
       expect(logged).toHaveBeenCalledWith({
         path: "notes.list",
         err: expect.any(Error),
+      });
+    } finally {
+      await env.DB.prepare("ALTER TABLE notes_hidden RENAME TO notes").run();
+      logged.mockRestore();
+    }
+  });
+
+  it("returns a crash as a value when the call is wrapped", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await env.DB.prepare("ALTER TABLE notes RENAME TO notes_hidden").run();
+
+    try {
+      // The point of `safeCall`: a thrown error reaches the browser with its `code`
+      // and `data` stripped, so a wrapped call hands them back as data instead.
+      expect(await call.create({ title: "first" })).toEqual({
+        status: "error",
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Something went wrong",
       });
     } finally {
       await env.DB.prepare("ALTER TABLE notes_hidden RENAME TO notes").run();

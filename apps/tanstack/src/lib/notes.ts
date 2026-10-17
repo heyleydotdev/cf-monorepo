@@ -6,12 +6,16 @@ import type {
   NoteParamInput,
   NoteUpdateInput,
 } from "@acme/core/notes.schema";
-import { createApiClient } from "@acme/api/server";
+import { createApiClient, safeCall } from "@acme/api/server";
 
 /**
  * The notes api as server functions. The validators are pass-throughs — Start has
  * none that only types `data` — so validation stays in the procedure; they take
  * the schema's *input* side, where `id` is still a string.
+ *
+ * Only calls a UI acts on inline return a `SafeCallResponse`. Reads stay throwing,
+ * so a loader failure lands in the router's error component instead of coming back
+ * as a value nothing checks.
  */
 
 // Read inside the handlers, never at module scope: `cloudflare:workers` does not
@@ -28,7 +32,7 @@ export const getNoteFn = createServerFn({ method: "GET" })
 
 export const createNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteInput) => data)
-  .handler(({ data }) => api().notes.create(data));
+  .handler(({ data }) => safeCall(api().notes.create(data)));
 
 export const updateNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteUpdateInput) => data)

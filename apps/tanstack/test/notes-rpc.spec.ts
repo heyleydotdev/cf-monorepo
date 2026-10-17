@@ -62,7 +62,7 @@ describe("POST /api/rpc", () => {
     expect(await payload(res)).toMatchObject({
       json: {
         code: "INPUT_VALIDATION_FAILED",
-        data: { fieldErrors: { title: ["title is required"] } },
+        data: { fieldErrors: { title: [{ message: "Title is required" }] } },
       },
     });
   });

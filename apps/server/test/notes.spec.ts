@@ -63,10 +63,11 @@ describe("POST /api/notes", () => {
   it("rejects an empty title, naming the field", async () => {
     const res = await post({ title: "" });
     expect(res.status).toBe(400);
-    // Shaped on the way out; see `shapeInputErrors` in packages/api/src/context.ts.
+    // Shaped on the way out; see the `errorHandler` middleware in context.ts.
+    // `{ message }` is what shadcn's `FieldError` renders, so the UI is its consumer.
     expect(await res.json()).toMatchObject({
       code: "INPUT_VALIDATION_FAILED",
-      data: { fieldErrors: { title: ["title is required"] } },
+      data: { fieldErrors: { title: [{ message: "Title is required" }] } },
     });
   });
 
