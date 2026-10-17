@@ -22,7 +22,9 @@
   "dependencies": {
     "@acme/api": "workspace:*",
     "@acme/core": "workspace:*",
+    "@acme/ui": "workspace:*",
     "@tanstack/react-devtools": "0.10.13",
+    "@tanstack/react-form": "1.33.5",
     "@tanstack/react-router": "1.170.41",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/react-start": "1.168.60",
@@ -33,7 +35,6 @@
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "@acme/ui": "workspace:*",
     "@acme/vitest": "workspace:*",
     "@cloudflare/vite-plugin": "^1.26.0",
     "@cloudflare/vitest-plugin": "catalog:",
