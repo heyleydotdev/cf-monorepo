@@ -128,3 +128,8 @@
     @apply font-sans;
   }
 }
+
+@utility container {
+  margin-inline: auto;
+  max-width: var(--breakpoint-md);
+}
