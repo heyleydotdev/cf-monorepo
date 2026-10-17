@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
@@ -19,8 +19,16 @@ import { Input } from "@acme/ui/components/input";
 import { Spinner } from "@acme/ui/components/spinner";
 import { Textarea } from "@acme/ui/components/textarea";
 import { Icons } from "@acme/ui/lib/icons";
+import { cn } from "@acme/ui/lib/utils";
 
-import { createNoteFn, deleteNoteFn, listNotesFn } from "~/lib/notes";
+import {
+  createNoteFn,
+  deleteNoteFn,
+  listNotesFn,
+  updateNoteFn,
+} from "~/lib/notes";
+
+type Note = Awaited<ReturnType<typeof listNotesFn>>[number];
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
@@ -30,10 +38,18 @@ export const Route = createFileRoute("/")({
 function RouteComponent() {
   const notes = Route.useLoaderData();
   const [error, setError] = useState<string | null>(null);
+  const [edit, setEdit] = useState<Note | null>(null);
 
   const onError = useCallback(
     (err?: string | null) => setError(err && err.length > 0 ? err : null),
     [],
+  );
+
+  const onEdit = useCallback(
+    (id: number | null) => {
+      setEdit(notes.find((item) => item.id == id) ?? null);
+    },
+    [notes],
   );
 
   return (
@@ -48,7 +64,13 @@ function RouteComponent() {
         </CardHeader>
         <CardContent className="bg-muted flex-1 px-0">
           {notes.map((note) => (
-            <NoteItem key={note.id} note={note} onError={onError} />
+            <NoteItem
+              key={note.id}
+              note={note}
+              editing={note.id === edit?.id}
+              onEdit={onEdit}
+              onError={onError}
+            />
           ))}
         </CardContent>
         <CardFooter className="bg-background sticky bottom-0 z-50 flex-col gap-(--card-spacing)">
@@ -60,7 +82,20 @@ function RouteComponent() {
               {error}
             </Alert>
           )}
-          <NoteForm onError={onError} />
+          {edit && (
+            <div className="bg-muted grid w-full grid-cols-[1fr_auto] gap-(--card-spacing) pl-3">
+              <p className="line-clamp-1 self-center overflow-hidden">
+                Editing: {edit.title}
+              </p>
+              <Button onClick={() => onEdit(null)}>Cancel</Button>
+            </div>
+          )}
+          <NoteForm
+            key={edit?.id ?? "new"}
+            note={edit}
+            onEdit={onEdit}
+            onError={onError}
+          />
         </CardFooter>
       </Card>
     </div>
@@ -68,10 +103,12 @@ function RouteComponent() {
 }
 
 function NoteItem(props: {
-  note: Awaited<ReturnType<typeof listNotesFn>>[number];
+  note: Note;
+  editing: boolean;
+  onEdit: (id: number | null) => void;
   onError?: (err?: string | null) => void;
 }) {
-  const { note, onError } = props;
+  const { note, editing, onEdit, onError } = props;
   const router = useRouter();
 
   const onDelete = useCallback(async () => {
@@ -79,6 +116,7 @@ function NoteItem(props: {
       return;
     }
 
+    onEdit(null);
     onError?.(null);
 
     const res = await deleteNoteFn({ data: { id: note.id } }).catch(() => null);
@@ -101,31 +139,43 @@ function NoteItem(props: {
     }
 
     onError?.(res.message);
-  }, [note.id, note.title, onError, router]);
+  }, [note.id, note.title, onEdit, onError, router]);
 
   return (
-    <div className="group hover:bg-background grid grid-cols-[1fr_auto_auto] gap-1 border-b bg-transparent p-(--card-spacing) last:border-b-0">
+    <div
+      className={cn(
+        "group hover:bg-background grid grid-cols-[1fr_auto_auto] gap-1 border-b bg-transparent p-(--card-spacing) transition-colors last:border-b-0",
+        editing && "bg-primary/20 hover:bg-primary/15",
+      )}
+    >
       <div className="self-center">
         <h4 className="text-foreground text-sm/6 font-medium text-balance">
           {note.title}&nbsp;
           <time
             className="text-muted-foreground text-[11px]/6 font-normal"
-            dateTime={note.updatedAt.toISOString()}
-            title={formatDate(note.updatedAt)}
+            dateTime={note.createdAt.toISOString()}
+            title={formatDate(note.createdAt)}
           >
-            ( {timeAgo(note.updatedAt)} )
+            ( {timeAgo(note.createdAt)} )
           </time>
         </h4>
         {note.body && (
           <p className="text-muted-foreground mt-1 text-balance">{note.body}</p>
         )}
       </div>
-      <Button variant="outline" size="icon" aria-label="Edit note">
+      <Button
+        variant="outline"
+        size="icon"
+        className="opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
+        aria-label="Edit note"
+        onClick={() => onEdit(note.id)}
+      >
         <Icons.edit />
       </Button>
       <Button
         variant="outline"
         size="icon"
+        className="opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
         aria-label="Delete note"
         onClick={onDelete}
       >
@@ -135,28 +185,40 @@ function NoteItem(props: {
   );
 }
 
-function NoteForm(props: { onError?: (err?: string | null) => void }) {
+function NoteForm(props: {
+  note?: Note | null;
+  onEdit: (id: number | null) => void;
+  onError?: (err?: string | null) => void;
+}) {
+  const { note, onEdit, onError } = props;
   const router = useRouter();
+  const titleRef = useRef<React.ComponentRef<typeof Input>>(null);
 
   const form = useForm({
     defaultValues: {
-      title: "",
-      body: "",
+      title: note?.title ?? "",
+      body: note?.body ?? "",
     },
     validators: {
       onSubmit: Note.required({ body: true }),
     },
     onSubmit: async ({ value, formApi }) => {
-      const res = await createNoteFn({ data: value }).catch(() => null);
+      const res = await (
+        note
+          ? updateNoteFn({ data: { id: note.id, ...value } })
+          : createNoteFn({ data: value })
+      ).catch(() => null);
 
       if (!res) {
-        props.onError?.("Could not save the note");
+        onError?.("Could not save the note");
         return;
       }
 
       if (res.status === "ok") {
         formApi.reset();
+        onEdit(null);
         await router.invalidate({ sync: true });
+        return;
       }
 
       if (res.status === "invalid") {
@@ -165,11 +227,15 @@ function NoteForm(props: { onError?: (err?: string | null) => void }) {
         });
       }
 
-      if (res.status === "error") {
-        props.onError?.(res.message);
-      }
+      onError?.(res.message);
     },
   });
+
+  useEffect(() => {
+    if (note?.id) {
+      titleRef.current?.select();
+    }
+  }, [note?.id]);
 
   return (
     <form
@@ -177,7 +243,7 @@ function NoteForm(props: { onError?: (err?: string | null) => void }) {
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        props.onError?.(null);
+        onError?.(null);
         form.handleSubmit();
       }}
     >
@@ -191,6 +257,7 @@ function NoteForm(props: { onError?: (err?: string | null) => void }) {
               <Field data-invalid={isInvalid}>
                 <Input
                   id={field.name}
+                  ref={titleRef}
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
@@ -234,10 +301,17 @@ function NoteForm(props: { onError?: (err?: string | null) => void }) {
             <Button
               size="icon"
               type="submit"
+              aria-label={note ? "Save note" : "Add note"}
               className="col-start-2 row-start-1"
               disabled={!canSubmit}
             >
-              {isSubmitting ? <Spinner /> : <Icons.send />}
+              {isSubmitting ? (
+                <Spinner />
+              ) : note ? (
+                <Icons.save />
+              ) : (
+                <Icons.send />
+              )}
             </Button>
           )}
         </form.Subscribe>
