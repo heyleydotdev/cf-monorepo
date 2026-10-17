@@ -36,7 +36,7 @@ export const createNoteFn = createServerFn({ method: "POST" })
 
 export const updateNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteUpdateInput) => data)
-  .handler(({ data }) => api().notes.update(data));
+  .handler(({ data }) => safeCall(api().notes.update(data)));
 
 export const deleteNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteParamInput) => data)

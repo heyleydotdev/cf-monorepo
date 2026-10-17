@@ -28,8 +28,8 @@ const call = {
 
 /**
  * Assertions use the API's factories, whose `instanceof` compares codes, not classes.
- * `createNoteFn` and `deleteNoteFn` are wrapped in `safeCall`, so their failures
- * arrive as a value.
+ * `createNoteFn`, `updateNoteFn` and `deleteNoteFn` are wrapped in `safeCall`, so
+ * their failures arrive as a value.
  */
 
 async function seed(data: NoteInput): Promise<Created> {
@@ -129,25 +129,36 @@ describe("getNoteFn", () => {
 describe("updateNoteFn", () => {
   it("updates one field and leaves the rest", async () => {
     const created = await seed({ title: "first", body: "keep" });
+
     expect(await call.update(created.id, { title: "second" })).toMatchObject({
-      title: "second",
-      body: "keep",
+      status: "ok",
+      data: { id: created.id, title: "second", body: "keep" },
     });
   });
 
-  it("rejects an empty patch", async () => {
+  it("returns an empty patch as a validation failure", async () => {
     const created = await seed({ title: "first" });
+
     // An empty patch is exactly what the schema must refuse.
-    await expect(
-      call.update(created.id, {} as NotePatchInput),
-    ).rejects.toBeInstanceOf(INPUT_VALIDATION_FAILED);
+    expect(await call.update(created.id, {} as NotePatchInput)).toMatchObject({
+      status: "invalid",
+      issues: { fieldErrors: { title: [{ message: "Title is required" }] } },
+    });
   });
 
-  it("still rejects an empty title", async () => {
+  it("returns an empty title as a validation failure", async () => {
     const created = await seed({ title: "first" });
-    await expect(call.update(created.id, { title: "" })).rejects.toBeInstanceOf(
-      INPUT_VALIDATION_FAILED,
-    );
+
+    expect(await call.update(created.id, { title: "" })).toMatchObject({
+      status: "invalid",
+      issues: { fieldErrors: { title: [{ message: "Title is required" }] } },
+    });
+  });
+
+  it("returns NOTE_NOT_FOUND for an unknown id", async () => {
+    expect(
+      await call.update(await freeId(), { title: "second" }),
+    ).toMatchObject({ status: "error", code: "NOTE_NOT_FOUND" });
   });
 });
 
