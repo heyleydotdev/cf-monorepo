@@ -28,7 +28,8 @@ const call = {
 
 /**
  * Assertions use the API's factories, whose `instanceof` compares codes, not classes.
- * `createNoteFn` is the one wrapped in `safeCall`, so its failures arrive as a value.
+ * `createNoteFn` and `deleteNoteFn` are wrapped in `safeCall`, so their failures
+ * arrive as a value.
  */
 
 async function seed(data: NoteInput): Promise<Created> {
@@ -153,24 +154,33 @@ describe("updateNoteFn", () => {
 describe("deleteNoteFn", () => {
   it("removes the note", async () => {
     const created = await seed({ title: "first" });
-    expect(await call.remove(created.id)).toEqual({ ok: true });
+    expect(await call.remove(created.id)).toEqual({
+      status: "ok",
+      data: { ok: true },
+    });
     await expect(call.get(created.id)).rejects.toBeInstanceOf(NOTE_NOT_FOUND);
   });
 
-  it("throws NOTE_NOT_FOUND for a second delete", async () => {
+  it("returns NOTE_NOT_FOUND for a second delete", async () => {
     const created = await seed({ title: "first" });
     await call.remove(created.id);
 
-    // Success is resolution, not `false`: a boolean makes "already gone" a success.
-    await expect(call.remove(created.id)).rejects.toBeInstanceOf(
-      NOTE_NOT_FOUND,
-    );
+    // Success is a status, not `false`: a boolean makes "already gone" a success.
+    expect(await call.remove(created.id)).toMatchObject({
+      status: "error",
+      code: "NOTE_NOT_FOUND",
+    });
   });
 
-  it("rejects a non-numeric id", async () => {
-    await expect(call.remove("abc")).rejects.toBeInstanceOf(
-      INPUT_VALIDATION_FAILED,
-    );
+  it("returns a validation failure for a non-numeric id", async () => {
+    expect(await call.remove("abc")).toMatchObject({
+      status: "invalid",
+      issues: {
+        fieldErrors: {
+          id: [{ message: "Note id must be a positive integer" }],
+        },
+      },
+    });
   });
 });
 

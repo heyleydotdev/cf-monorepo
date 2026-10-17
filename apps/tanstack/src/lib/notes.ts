@@ -40,4 +40,4 @@ export const updateNoteFn = createServerFn({ method: "POST" })
 
 export const deleteNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteParamInput) => data)
-  .handler(({ data }) => api().notes.remove(data));
+  .handler(({ data }) => safeCall(api().notes.remove(data)));
