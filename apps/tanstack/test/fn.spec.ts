@@ -9,9 +9,9 @@ import {
   deleteNoteFn,
   getNoteFn,
   listNotesFn,
+  serverTimeFn,
   updateNoteFn,
-} from "../src/lib/notes";
-import { serverTimeFn } from "../src/lib/time";
+} from "../src/lib/server-fns";
 import { withStartContext } from "./start-context";
 
 type Created = { id: number; title: string; body: string };

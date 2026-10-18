@@ -28,3 +28,9 @@ export const updateNoteFn = createServerFn({ method: "POST" })
 export const deleteNoteFn = createServerFn({ method: "POST" })
   .validator((data: NoteParamInput) => data)
   .handler(({ data }) => safeCall(rpcServer.notes.remove(data)));
+
+// The loader's first value for the same procedure the browser then refetches
+// through `rpcClient` in `routes/index.tsx`.
+export const serverTimeFn = createServerFn({ method: "GET" }).handler(() =>
+  rpcServer.time(),
+);

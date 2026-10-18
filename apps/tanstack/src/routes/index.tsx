@@ -26,9 +26,9 @@ import {
   createNoteFn,
   deleteNoteFn,
   listNotesFn,
+  serverTimeFn,
   updateNoteFn,
-} from "~/lib/notes";
-import { serverTimeFn } from "~/lib/time";
+} from "~/lib/server-fns";
 import { rpcClient } from "~/rpc/client";
 
 type Note = Awaited<ReturnType<typeof listNotesFn>>[number];
