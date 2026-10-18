@@ -53,6 +53,24 @@ describe("server worker", () => {
     expect(response.status).toBe(404);
   });
 
+  it("serves the api reference at /docs", async () => {
+    const response = await exports.default.fetch("https://example.com/docs");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+  });
+
+  it("serves the OpenAPI document at /docs/spec.json", async () => {
+    const response = await exports.default.fetch(
+      "https://example.com/docs/spec.json",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      info: { title: "Cloudflare Monorepo API", version: "0.1.0" },
+      paths: { "/api/health": expect.anything() },
+    });
+  });
+
   it("sees the generated Env", async () => {
     // The point is the D1 binding wrangler.jsonc declares. A bare
     // `expect(env).toBeTypeOf("object")` would pass even with no binding.

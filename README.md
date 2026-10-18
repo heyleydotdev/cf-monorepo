@@ -46,15 +46,15 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 
 ## Workspaces
 
-| Workspace                        | What it is                                                                                                          |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [`apps/server`](apps/server)     | Cloudflare Worker. Mounts `packages/api` at `/api`, with Wrangler config and Vitest running in the Workers runtime. |
-| [`apps/tanstack`](apps/tanstack) | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.         |
-| [`packages/api`](packages/api)   | oRPC router, both fetch handlers (`/server`) and the browser client (`/client`).                                    |
-| [`packages/core`](packages/core) | Transport-agnostic logic: the notes service, Zod schemas and shared helpers.                                        |
-| [`packages/db`](packages/db)     | Drizzle on D1. Typed client and schema, plus migration generation.                                                  |
-| [`packages/ui`](packages/ui)     | React components and the shared Tailwind theme. React is a peer dependency.                                         |
-| [`tooling/*`](tooling)           | Shared tsconfig, ESLint, Prettier and Vitest configs, published internally as `@acme/*`.                            |
+| Workspace                        | What it is                                                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`apps/server`](apps/server)     | Cloudflare Worker. Mounts `packages/api` at `/api`, serving the Scalar reference at `/docs`, with Wrangler config and Vitest running in the Workers runtime. |
+| [`apps/tanstack`](apps/tanstack) | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                                                  |
+| [`packages/api`](packages/api)   | oRPC router, both fetch handlers (`/server`) and the browser client (`/client`).                                                                             |
+| [`packages/core`](packages/core) | Transport-agnostic logic: the notes service, Zod schemas and shared helpers.                                                                                 |
+| [`packages/db`](packages/db)     | Drizzle on D1. Typed client and schema, plus migration generation.                                                                                           |
+| [`packages/ui`](packages/ui)     | React components and the shared Tailwind theme. React is a peer dependency.                                                                                  |
+| [`tooling/*`](tooling)           | Shared tsconfig, ESLint, Prettier and Vitest configs, published internally as `@acme/*`.                                                                     |
 
 > [!NOTE]
 > Only two apps ship today. Adding another is a copy-and-rename job, see [Adding a workspace](#adding-a-workspace).
@@ -73,7 +73,7 @@ flowchart LR
     DB["packages/db<br/><sub>Drizzle + D1</sub>"]
     UI["packages/ui<br/><sub>components + theme</sub>"]
 
-    S -- "/api (REST)" --> API
+    S -- "/api (REST)<br/>/docs (Scalar + spec)" --> API
     T -- "/api/rpc (RPC)<br/>+ in-process calls" --> API
     T --> UI
     API --> CORE --> DB
@@ -229,7 +229,7 @@ Every package maps `types` and `default` to the same `src/*.ts` path, so nothing
 <details>
 <summary><b>Three ways in, one router</b></summary>
 
-- **REST:** `apps/server` mounts `restHandler` from `packages/api` at `/api`. This is the external HTTP surface. Paths and methods come from each procedure's `openapi()` metadata.
+- **REST:** `apps/server` mounts `restHandler` from `packages/api` at `/api`. This is the external HTTP surface. Paths and methods come from each procedure's `openapi()` metadata, and the same handler serves the Scalar reference at `/docs` with its OpenAPI document at `/docs/spec.json`. Those two stay absolute: the reference plugin resolves them against the handler's mount prefix, not the router's `openapi()` one.
 - **RPC:** `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, serving the same procedures over oRPC's native protocol for any client typed by `Router`.
 - **In-process:** the TanStack app's own loaders use the server functions in `src/lib/`, which call procedures through `createRpcServer` without a request leaving the Worker. The one browser call (the server-time widget) goes through `createRpcClient` in `src/rpc/client.ts`.
 

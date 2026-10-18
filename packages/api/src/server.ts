@@ -1,10 +1,13 @@
+import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferenceHandlerPlugin } from "@orpc/openapi/plugins";
 import {
   COMMON_ERROR_STATUS_MAP,
   createRouterClient,
   ORPCError,
 } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
+import { ZodToJsonSchemaConverter } from "@orpc/zod";
 
 import type { RpcServerContext } from "./context";
 import type { InputValidationDataOutput } from "./errors";
@@ -32,8 +35,35 @@ const errorStatusMap = {
   [NOTE_NOT_FOUND.code]: 404,
 };
 
-/** REST, at the prefix in the `openapi()` metadata on the router. */
-export const restHandler = new OpenAPIHandler(router, { errorStatusMap });
+// One document, generated from the router both handlers serve.
+const generator = new OpenAPIGenerator({
+  converters: [new ZodToJsonSchemaConverter()],
+});
+
+/**
+ * REST, on the paths the router's `openapi()` metadata declares (`/api/...`), plus
+ * the Scalar reference UI and the spec it loads.
+ *
+ * `docsPath` and `specPath` stay absolute: the plugin resolves them against the
+ * handle-time `prefix`, which this app does not pass, so the router's
+ * `openapi({ prefix: "/api" })` never reaches them.
+ */
+export const restHandler = new OpenAPIHandler(router, {
+  plugins: [
+    new OpenAPIReferenceHandlerPlugin({
+      provider: "scalar",
+      docsPath: "/docs",
+      specPath: "/docs/spec.json",
+      spec: () =>
+        generator.generate(router, {
+          base: {
+            info: { title: "Cloudflare Monorepo API", version: "0.1.0" },
+          },
+        }),
+    }),
+  ],
+  errorStatusMap,
+});
 
 /** oRPC's own RPC shape, for an oRPC client; the host passes its mount prefix. */
 export const rpcHandler = new RPCHandler(router, { errorStatusMap });

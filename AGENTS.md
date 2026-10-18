@@ -32,11 +32,12 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 
 ## Traps
 
-**Read "Things that will bite" in `README.md` first.** It covers the runners, prettier versions, the `~/*` alias halves, `dev.port`, secrets, the `VITE_` prefix, and the two apps' separate local D1. The entries below are not in it.
+**Read the Troubleshooting section in `README.md` first.** It covers the runners, prettier versions, the `~/*` alias halves, `dev.port`, the `VITE_` prefix, and the two apps' separate local D1. The entries below are not in it.
 
 - **`includeIgnoreFile` needs `gitignoreResolution: true`.** `@acme/eslint` lives in `tooling/eslint/`, so the default resolves root `.gitignore` patterns against that directory, matches nothing, and looks like it works.
 - **`ViteTypeOptions.strictImportMetaEnv` is what makes env vars type-checked.** Without it vite types `import.meta.env` as `Record<string, any>`, so a misspelling compiles and inlines as `undefined`.
 - **Do not override `envPrefix` to avoid the `VITE_` prefix.** A custom prefix must also be declared in turbo's task `env` and in `ImportMetaEnv`; miss one and it is a stale bundle or a type error.
+- **The OpenAPI reference plugin ignores the router's `openapi()` prefix.** Its `docsPath` and `specPath` resolve against the handle-time `prefix`, which `apps/server` does not pass, so they stay absolute (`/docs`, `/docs/spec.json`) while procedures sit under `/api`. Passing `prefix: "/api"` to `handle()` double-prefixes the procedures instead of moving the docs.
 
 ## Key Conventions
 
@@ -50,7 +51,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - `packages/api` keeps `router` a concrete const: `restHandler` (REST) and `rpcHandler` (RPC) infer from it, as do the OpenAPI document and `createRpcServer`. A factory return type loses the procedure literals and infers `unknown`.
 - `packages/api` has no root entry, so the runtime decides the import: `@acme/api/server` is everything that runs on Workers — router, both handlers, `createRpcServer`, `safeCall` — and `@acme/api/client` is the browser's — the link and the TanStack Query utils built on it. The wrong one fails at build rather than at runtime.
 - `packages/api` never reads `cloudflare:workers`. `RpcServerContext` declares the bindings and the caller passes them — `restHandler.handle(request, { context: { Env } })`, `createRpcServer({ Env })` — because a shared package cannot name one `Env`.
-- `apps/server` mounts `restHandler` at `/api`; `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, calls `createRpcServer` in-process from its server functions, and reaches the same procedures from the browser through `createRpcClient`.
+- `apps/server` mounts `restHandler` at `/api` (Scalar reference at `/docs`, its spec at `/docs/spec.json`); `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, calls `createRpcServer` in-process from its server functions, and reaches the same procedures from the browser through `createRpcClient`.
 - File and directory names are lowercase kebab-case, except names a tool dictates: `README.md`, `AGENTS.md`, `bun.lock`, `tsconfig.*.json`, `apps/tanstack/src/routes/__root.tsx`, `routeTree.gen.ts`.
 
 ## External References
