@@ -38,6 +38,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - **`ViteTypeOptions.strictImportMetaEnv` is what makes env vars type-checked.** Without it vite types `import.meta.env` as `Record<string, any>`, so a misspelling compiles and inlines as `undefined`.
 - **Do not override `envPrefix` to avoid the `VITE_` prefix.** A custom prefix must also be declared in turbo's task `env` and in `ImportMetaEnv`; miss one and it is a stale bundle or a type error.
 - **The OpenAPI reference plugin ignores the router's `openapi()` prefix.** Its `docsPath` and `specPath` resolve against the handle-time `prefix`, which `apps/server` does not pass, so they stay absolute (`/docs`, `/docs/spec.json`) while procedures sit under `/api`. Passing `prefix: "/api"` to `handle()` double-prefixes the procedures instead of moving the docs.
+- **Root `dev` stays `persistent: false`; each app opts in through its own `turbo.json`.** `apps/server` and `apps/tanstack` each override only `dev.persistent` behind `"extends": ["//"]`, inheriting `cache: false` and `dependsOn: ["^dev"]` from the root. The other eight workspaces have no `dev` script and resolve a transit node, so the root only ever describes packages that never run a dev server; `persistent` belongs to the apps that do.
 
 ## Key Conventions
 

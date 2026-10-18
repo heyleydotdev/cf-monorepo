@@ -124,7 +124,7 @@ A small, end-to-end example of the whole stack. Read it in one sitting, then del
 | RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                        |
 | RPC client       | `apps/tanstack/src/rpc/client.ts`                              |
 | RPC server       | `apps/tanstack/src/rpc/server.ts`                              |
-| Server functions | `apps/tanstack/src/lib/{notes,time}.ts`                        |
+| Server functions | `apps/tanstack/src/lib/server-fns.ts`                          |
 | Components       | `packages/ui/src/components/*.tsx` (shadcn)                    |
 | Page             | `apps/tanstack/src/routes/index.tsx`                           |
 | Tests            | `apps/server/test/api.spec.ts`, `apps/tanstack/test/*.spec.ts` |
@@ -196,7 +196,7 @@ Prettier can break types in this setup, so typecheck right after formatting.
    cd apps/server && bunx wrangler d1 create acme-db
    ```
 
-2. **Apply migrations once.** Both apps point at that same database, so running the root script would apply them twice.
+2. **Apply migrations once.** `apps/server` and `apps/tanstack` point at that same database, so running the root script would apply them twice.
 
    ```bash
    bunx turbo migrate:remote --filter=@acme/server
@@ -320,7 +320,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 ## Making it yours
 
 1. **Rename the scope.** The boilerplate uses `@acme/*` and a database named `acme-db`. Search the repo for `acme` and replace it with your own names, then run `bun install`.
-2. **Delete the notes example.** Remove the notes service, the `Note*` schemas and their exports from `packages/db/src/schema.ts`, `packages/api/src/routes/notes.ts`, `apps/tanstack/src/lib/{notes,time}.ts`, the demo page and the specs, then the references to them. Keep the schema module, the router, both handlers and the UI primitives.
+2. **Delete the notes example.** Remove the notes service, the `Note*` schemas and their exports from `packages/db/src/schema.ts`, `packages/api/src/routes/notes.ts`, `apps/tanstack/src/lib/server-fns.ts` (its `serverTimeFn` belongs to the demo page too), the demo page and the specs, then the references to them. Keep the schema module, the router, both handlers and the UI primitives.
 3. **Add your schema.** Edit `packages/db/src/schema.ts`, run `bun run generate`, then `bun run migrate`.
 4. **Add your procedures** in `packages/api`, backed by services in `packages/core`.
 
