@@ -5,13 +5,13 @@ import { createDb } from "@acme/db/client";
 
 import { INPUT_VALIDATION_FAILED } from "./errors";
 
-export type OSContext = {
+export type RpcServerContext = {
   Env: {
     DB: D1Database;
   };
 };
 
-const base = os.$context<OSContext>();
+const base = os.$context<RpcServerContext>();
 
 /**
  * The caller supplies its bindings — a shared package cannot name one `Env` — and

@@ -1,6 +1,4 @@
-export const appName = "Cloudflare Monorepo";
-
-export function createTitle(page: string): string {
+export function createTitle(page: string, appName: string): string {
   return `${page} - ${appName}`;
 }
 

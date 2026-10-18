@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "cloudflare:workers";
 
-import { rpcHandler } from "@acme/api";
+import { rpcHandler } from "@acme/api/server";
 
 /**
- * The router over oRPC's own RPC protocol, at POST /api/rpc/<procedure path>. This
- * app reaches the same procedures through the server functions in src/lib/notes.ts,
- * so the endpoint exists for callers that are not this app; any oRPC client pointed
- * at it is typed by `Router` from @acme/api.
+ * The router over oRPC's own RPC protocol, at POST /api/rpc/<procedure path>. The
+ * browser calls it through `rpcClient` in src/rpc/client.ts; loaders and server
+ * functions reach the same procedures in-process through `rpcServer`.
  */
 export const Route = createFileRoute("/api/rpc/$")({
   server: {

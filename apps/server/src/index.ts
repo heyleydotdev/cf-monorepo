@@ -1,9 +1,9 @@
-import { handler } from "@acme/api";
+import { restHandler } from "@acme/api/server";
 
 /** The API is a fetch handler, so the Worker exports it directly. */
 export default {
   fetch: async (request, env) => {
-    const { matched, response } = await handler.handle(request, {
+    const { matched, response } = await restHandler.handle(request, {
       context: {
         Env: { DB: env.DB },
       },

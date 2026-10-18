@@ -17,15 +17,15 @@ No framework opinions beyond the wiring. The notes example is here to be deleted
 
 ## Workspaces
 
-| Workspace       | What it is                                                                                                                         |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime.                                          |
-| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                        |
-| `packages/api`  | oRPC router plus the REST and RPC fetch handlers. Mounted by `apps/server` at `/api`, and as RPC by `apps/tanstack` at `/api/rpc`. |
-| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.                       |
-| `packages/ui`   | React components plus the Tailwind theme. React is a peer dependency rather than bundled, so the app supplies React.               |
-| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.               |
-| `tooling/*`     | Shared tsconfig, eslint, prettier and vitest harnesses, as `@acme/*` packages.                                                     |
+| Workspace       | What it is                                                                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/server`   | Cloudflare Worker. Mounts `packages/api`, wrangler config, vitest in the Workers runtime.                                                                             |
+| `apps/tanstack` | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                                                           |
+| `packages/api`  | oRPC router and both fetch handlers (`/server`), plus the browser client (`/client`). Mounted by `apps/server` at `/api` and as RPC by `apps/tanstack` at `/api/rpc`. |
+| `packages/core` | Transport-agnostic logic: the notes service, the zod schemas, shared helpers. Imported as TypeScript source.                                                          |
+| `packages/ui`   | React components plus the Tailwind theme. React is a peer dependency rather than bundled, so the app supplies React.                                                  |
+| `packages/db`   | Drizzle on D1. Typed client plus the schema; `bun run generate` writes SQL that `wrangler d1 migrations apply` runs.                                                  |
+| `tooling/*`     | Shared tsconfig, eslint, prettier and vitest harnesses, as `@acme/*` packages.                                                                                        |
 
 ## Requirements
 
@@ -61,17 +61,19 @@ wrangler d1 create acme-db
 
 A worked example of the whole stack, small enough to read in one sitting and delete when it has served its purpose:
 
-| Layer            | File                                                         |
-| ---------------- | ------------------------------------------------------------ |
-| Table            | `packages/db/src/schema.ts`                                  |
-| Queries          | `packages/core/src/services/notes.service.ts`                |
-| Validation       | `packages/core/src/schemas/notes.schema.ts`                  |
-| HTTP routes      | `packages/api/src/routes/notes.ts`                           |
-| RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                      |
-| Server functions | `apps/tanstack/src/lib/notes.ts`                             |
-| Components       | `packages/ui/src/components/*.tsx` (shadcn)                  |
-| Page             | `apps/tanstack/src/routes/index.tsx`                         |
-| Tests            | `apps/server/test/*.spec.ts`, `apps/tanstack/test/*.spec.ts` |
+| Layer            | File                                                             |
+| ---------------- | ---------------------------------------------------------------- |
+| Table            | `packages/db/src/schema.ts`                                      |
+| Queries          | `packages/core/src/services/notes.service.ts`                    |
+| Validation       | `packages/core/src/schemas/notes.schema.ts`                      |
+| HTTP routes      | `packages/api/src/routes/notes.ts`                               |
+| RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                          |
+| RPC client       | `apps/tanstack/src/rpc/client.ts`                                |
+| RPC server       | `apps/tanstack/src/rpc/server.ts`                                |
+| Server functions | `apps/tanstack/src/lib/{notes,time}.ts`                          |
+| Components       | `packages/ui/src/components/*.tsx` (shadcn)                      |
+| Page             | `apps/tanstack/src/routes/index.tsx`                             |
+| Tests            | `apps/server/test/index.spec.ts`, `apps/tanstack/test/*.spec.ts` |
 
 Every path reaches the same `@acme/core` service: the TanStack app through server functions that run inside its own Worker, the Worker app through `packages/api` mounted at `/api`, and callers outside this repo through the same router mounted as RPC at `/api/rpc`. Change the service and they change together.
 
@@ -149,9 +151,9 @@ A library that reads a Workers global declares `types` itself rather than switch
 
 **Shared versions come from the catalog.** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 
-**Three ways in, one router.** `apps/server` mounts the `handler` from `packages/api` at `/api` — that is the external HTTP surface, the same procedures served as REST by oRPC's OpenAPI adapter, with paths and methods taken from each procedure's `openapi()` metadata. `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, the same procedures over oRPC's own RPC protocol, for any oRPC client typed by `Router`. That is not what the app itself calls: its loaders use the server functions in `src/lib/notes.ts`, which reach the procedures through `createRouterClient` without a request leaving the Worker, where mounting a handler would mean a loader fetching its own origin over HTTP. No path can disagree about behaviour, because a procedure owns its own validation and every path runs the same procedure — the two handlers even share one `errorStatusMap`, so they cannot disagree about a status either.
+**Three ways in, one router.** `apps/server` mounts `restHandler` from `packages/api` at `/api` — that is the external HTTP surface, the same procedures served as REST by oRPC's OpenAPI adapter, with paths and methods taken from each procedure's `openapi()` metadata. `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, the same procedures over oRPC's own RPC protocol, for any oRPC client typed by `Router`. That is not what the app itself calls: its loaders use the server functions in `src/lib/`, which reach the procedures in-process through `createRpcServer` without a request leaving the Worker, where mounting a handler would mean a loader fetching its own origin over HTTP. The one browser call — the server-time widget — goes the other way, through `createRpcClient` in `src/rpc/client.ts`. No path can disagree about behaviour, because a procedure owns its own validation and every path runs the same procedure — the two handlers even share one `errorStatusMap`, so they cannot disagree about a status either.
 
-**The client is typed from the router.** `router` is a concrete const, so `createRouterClient(router, { context })` infers every procedure's input, output and declared errors. A procedure that does not exist fails to compile, and no call site needs a hand-written type. A factory return type would lose the procedure literals and infer `unknown`, which is why `router` stays a value. The same router generates the OpenAPI document behind the HTTP surface, so the REST description and the typed client cannot drift apart.
+**The client is typed from the router.** `router` is a concrete const, so `createRpcServer({ Env })` infers every procedure's input, output and declared errors. A procedure that does not exist fails to compile, and no call site needs a hand-written type. A factory return type would lose the procedure literals and infer `unknown`, which is why `router` stays a value. The same router generates the OpenAPI document behind the HTTP surface, so the REST description and the typed client cannot drift apart.
 
 ## Adding a workspace
 

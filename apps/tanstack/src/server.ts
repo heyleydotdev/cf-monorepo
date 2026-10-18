@@ -5,7 +5,7 @@ import startHandler, {
 /**
  * Entry point, named by `main` in wrangler.jsonc, and it must stay a local file:
  * the vite plugin resolves a package specifier there but the vitest pool treats it
- * as a path. Start answers everything: the app's own data comes from server
- * functions, and `routes/api/rpc.$.ts` serves the same procedures over RPC.
+ * as a path. Start answers everything: loaders and server functions run in-process,
+ * and `routes/api/rpc.$.ts` serves the same procedures over RPC to the browser.
  */
 export default createServerEntry({ fetch: startHandler.fetch });

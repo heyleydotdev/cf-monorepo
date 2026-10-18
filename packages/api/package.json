@@ -3,19 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
     },
     "./server": {
       "types": "./src/server.ts",
       "default": "./src/server.ts"
-    },
-    "./errors": {
-      "types": "./src/errors.ts",
-      "default": "./src/errors.ts"
     },
     "./package.json": "./package.json"
   },
@@ -28,8 +23,11 @@
   "dependencies": {
     "@acme/core": "workspace:*",
     "@acme/db": "workspace:*",
+    "@orpc/client": "2.0.0-beta.43",
     "@orpc/openapi": "2.0.0-beta.43",
     "@orpc/server": "2.0.0-beta.43",
+    "@orpc/tanstack-query": "2.0.0-beta.43",
+    "@tanstack/query-core": "5.104.4",
     "zod": "catalog:"
   },
   "devDependencies": {

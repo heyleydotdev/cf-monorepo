@@ -4,15 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = (path: string, init?: RequestInit) =>
   exports.default.fetch(`https://example.com/api${path}`, init);
 
-const post = (body: unknown) =>
-  api("/notes", {
+const post = (path: string, body: unknown) =>
+  api(path, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
 
 const postNote = async (body: unknown): Promise<{ id: number }> =>
-  (await (await post(body)).json()) as { id: number };
+  (await (await post("/notes", body)).json()) as { id: number };
 
 // Provably absent: create a note, then delete it. Never hardcode a sentinel —
 // `notes.id` is AUTOINCREMENT, so ids are never reused.
@@ -26,6 +26,41 @@ beforeEach(async () => {
   await env.DB.prepare("DELETE FROM notes").run();
 });
 
+describe("server worker", () => {
+  it("serves the mounted api", async () => {
+    const response = await exports.default.fetch(
+      "https://example.com/api/health",
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+  });
+
+  it("serves server time with milliseconds", async () => {
+    const response = await exports.default.fetch(
+      "https://example.com/api/time",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      iso: expect.stringMatching(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      ),
+    });
+  });
+
+  it("404s outside the api mount", async () => {
+    const response = await exports.default.fetch("https://example.com/");
+    expect(response.status).toBe(404);
+  });
+
+  it("sees the generated Env", async () => {
+    // The point is the D1 binding wrangler.jsonc declares. A bare
+    // `expect(env).toBeTypeOf("object")` would pass even with no binding.
+    const row = await env.DB.prepare("SELECT 1 AS n").first<{ n: number }>();
+    expect(row?.n).toBe(1);
+  });
+});
+
 describe("GET /api/notes", () => {
   it("starts empty", async () => {
     const res = await api("/notes");
@@ -34,8 +69,8 @@ describe("GET /api/notes", () => {
   });
 
   it("returns created notes newest first", async () => {
-    await post({ title: "first" });
-    await post({ title: "second", body: "hello" });
+    await post("/notes", { title: "first" });
+    await post("/notes", { title: "second", body: "hello" });
 
     const res = await api("/notes");
     expect(await res.json()).toMatchObject([
@@ -47,7 +82,7 @@ describe("GET /api/notes", () => {
 
 describe("POST /api/notes", () => {
   it("creates a note and defaults the body", async () => {
-    const res = await post({ title: "first" });
+    const res = await post("/notes", { title: "first" });
     expect(res.status).toBe(201);
     // Ids keep climbing across tests: DELETE does not reset the counter.
     const created = (await res.json()) as { id: number };
@@ -56,12 +91,12 @@ describe("POST /api/notes", () => {
   });
 
   it("rejects a missing title", async () => {
-    const res = await post({ body: "orphan" });
+    const res = await post("/notes", { body: "orphan" });
     expect(res.status).toBe(400);
   });
 
   it("rejects an empty title, naming the field", async () => {
-    const res = await post({ title: "" });
+    const res = await post("/notes", { title: "" });
     expect(res.status).toBe(400);
     // Shaped on the way out; see the `errorHandler` middleware in context.ts.
     // `{ message }` is what shadcn's `FieldError` renders, so the UI is its consumer.
@@ -72,7 +107,7 @@ describe("POST /api/notes", () => {
   });
 
   it("rejects a wrong-typed field", async () => {
-    const res = await post({ title: "ok", body: 5 });
+    const res = await post("/notes", { title: "ok", body: 5 });
     expect(res.status).toBe(400);
   });
 });

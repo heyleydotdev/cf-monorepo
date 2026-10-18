@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 import { formatDate, timeAgo } from "@acme/core";
@@ -27,16 +28,21 @@ import {
   listNotesFn,
   updateNoteFn,
 } from "~/lib/notes";
+import { serverTimeFn } from "~/lib/time";
+import { rpcClient } from "~/rpc/client";
 
 type Note = Awaited<ReturnType<typeof listNotesFn>>[number];
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
-  loader: () => listNotesFn(),
+  loader: async () => {
+    const [notes, time] = await Promise.all([listNotesFn(), serverTimeFn()]);
+    return { notes, time };
+  },
 });
 
 function RouteComponent() {
-  const notes = Route.useLoaderData();
+  const { notes } = Route.useLoaderData();
   const [error, setError] = useState<string | null>(null);
   const [edit, setEdit] = useState<Note | null>(null);
 
@@ -96,8 +102,52 @@ function RouteComponent() {
             onEdit={onEdit}
             onError={onError}
           />
+          <ServerTime />
         </CardFooter>
       </Card>
+    </div>
+  );
+}
+
+const REFETCH_MS = 5_000;
+
+const serverTimeFormat = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  fractionalSecondDigits: 3,
+  timeZone: "UTC",
+});
+
+function ServerTime() {
+  const { time } = Route.useLoaderData();
+  const queryClient = useQueryClient();
+  const { data } = useQuery(
+    rpcClient.time.queryOptions({
+      initialData: time,
+      staleTime: REFETCH_MS,
+      refetchInterval: REFETCH_MS,
+    }),
+  );
+
+  return (
+    <div className="bg-muted grid w-full grid-cols-[auto_1fr_auto]">
+      <div className="bg-foreground content-center px-3">
+        <p className="text-background">Server Time</p>
+      </div>
+      <p className="line-clamp-1 self-center overflow-hidden text-center tabular-nums">
+        {serverTimeFormat.format(new Date(data.iso))} UTC
+      </p>
+      <Button
+        onClick={() =>
+          queryClient.invalidateQueries({ queryKey: rpcClient.time.queryKey() })
+        }
+      >
+        Refresh
+      </Button>
     </div>
   );
 }
@@ -285,8 +335,7 @@ function NoteForm(props: {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Anything else worth remembering (optional)"
-                  rows={4}
-                  className="h-20 resize-none"
+                  className="resize-none"
                   aria-invalid={isInvalid}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}

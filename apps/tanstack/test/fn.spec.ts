@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { NoteInput, NotePatchInput } from "@acme/core/notes.schema";
-import { INPUT_VALIDATION_FAILED, NOTE_NOT_FOUND } from "@acme/api/errors";
+import { INPUT_VALIDATION_FAILED, NOTE_NOT_FOUND } from "@acme/api/server";
 
 import {
   createNoteFn,
@@ -11,6 +11,7 @@ import {
   listNotesFn,
   updateNoteFn,
 } from "../src/lib/notes";
+import { serverTimeFn } from "../src/lib/time";
 import { withStartContext } from "./start-context";
 
 type Created = { id: number; title: string; body: string };
@@ -192,6 +193,14 @@ describe("deleteNoteFn", () => {
         },
       },
     });
+  });
+});
+
+describe("serverTimeFn", () => {
+  it("returns the server's current time", async () => {
+    const { iso } = await withStartContext(() => serverTimeFn());
+
+    expect(Math.abs(Date.now() - Date.parse(iso))).toBeLessThan(60_000);
   });
 });
 

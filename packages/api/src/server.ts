@@ -1,21 +1,53 @@
-import { createRouterClient, ORPCError } from "@orpc/server";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import {
+  COMMON_ERROR_STATUS_MAP,
+  createRouterClient,
+  ORPCError,
+} from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
 
-import type { OSContext } from "./context";
+import type { RpcServerContext } from "./context";
 import type { InputValidationDataOutput } from "./errors";
-import { INPUT_VALIDATION_FAILED } from "./errors";
+import { INPUT_VALIDATION_FAILED, NOTE_NOT_FOUND } from "./errors";
 import { router } from "./router";
 
+// Re-exports: the router, its context type, and the errors.
+export { router, type Router } from "./router";
+export type { RpcServerContext } from "./context";
+export {
+  INPUT_VALIDATION_FAILED,
+  NOTE_NOT_FOUND,
+  type InputValidationDataOutput,
+} from "./errors";
+
+// Fetch handlers, sharing one status map.
 /**
- * Calls the procedures in-process: no Request, no isolate hop. There is no HTTP
- * client; that would need a contract rather than the router.
- *
- * Server-only, and named for that: the browser cannot reach it, and the `client`
- * subpath is left free for the RPC caller a front end would use.
+ * Shared by both handlers so the two surfaces cannot disagree about a status.
+ * Supplying `errorStatusMap` replaces the default rather than extending it, so the
+ * spread is load-bearing, and a code the map does not know is a 500.
  */
-export function createApiClient(context: OSContext) {
+const errorStatusMap = {
+  ...COMMON_ERROR_STATUS_MAP,
+  [INPUT_VALIDATION_FAILED.code]: 400,
+  [NOTE_NOT_FOUND.code]: 404,
+};
+
+/** REST, at the prefix in the `openapi()` metadata on the router. */
+export const restHandler = new OpenAPIHandler(router, { errorStatusMap });
+
+/** oRPC's own RPC shape, for an oRPC client; the host passes its mount prefix. */
+export const rpcHandler = new RPCHandler(router, { errorStatusMap });
+
+// In-process client.
+/**
+ * Calls the procedures in-process: no Request, no isolate hop. The host supplies
+ * its bindings, because a shared package cannot name one `Env`.
+ */
+export function createRpcServer(context: RpcServerContext) {
   return createRouterClient(router, { context });
 }
 
+// Server-function envelope.
 export type SafeCallResponse<T> =
   | { status: "ok"; data: T }
   | { status: "invalid"; message: string; issues: InputValidationDataOutput }

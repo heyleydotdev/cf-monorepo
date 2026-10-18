@@ -17,14 +17,14 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 
 ## Commands
 
-| Task                 | Command                                                |
-| -------------------- | ------------------------------------------------------ |
-| All tests            | `bun run test`                                         |
-| One test file        | `cd apps/server && bunx vitest run test/notes.spec.ts` |
-| Lint one workspace   | `bunx turbo lint --filter=@acme/core`                  |
-| Format one workspace | `bunx turbo format --filter=@acme/tanstack`            |
-| Apply D1 migrations  | `cd apps/tanstack && bun run migrate`                  |
-| Scope any task       | `bunx turbo <task> --filter=@acme/<pkg>`               |
+| Task                 | Command                                              |
+| -------------------- | ---------------------------------------------------- |
+| All tests            | `bun run test`                                       |
+| One test file        | `cd apps/server && bunx vitest run test/api.spec.ts` |
+| Lint one workspace   | `bunx turbo lint --filter=@acme/core`                |
+| Format one workspace | `bunx turbo format --filter=@acme/tanstack`          |
+| Apply D1 migrations  | `cd apps/tanstack && bun run migrate`                |
+| Scope any task       | `bunx turbo <task> --filter=@acme/<pkg>`             |
 
 ## Verify Before Reporting
 
@@ -47,9 +47,10 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - `typecheck` waits on `typecheck-transit`, not `^typecheck`, so a dependency change invalidates a dependent without serializing every package first.
 - A new public env var needs an `ImportMetaEnv` entry in `apps/tanstack/src/env.d.ts` and nothing in `turbo.json`.
 - Root files are formatted by the `//#format:root` task. A new root file type means a new glob in `turbo.json` and in both `format:root` scripts; the globs skip `bun.lock` and `.env.example` on purpose.
-- `packages/api` keeps `router` a concrete const: `handler` (REST) and `rpcHandler` (RPC) infer from it, as do the OpenAPI document and `createRouterClient`. A factory return type loses the procedure literals and infers `unknown`.
-- `packages/api` never reads `cloudflare:workers`. `OSContext` declares the bindings and the caller passes them — `handler.handle(request, { context: { Env } })`, `createApiClient({ Env })` — because a shared package cannot name one `Env`. `createApiClient` is server-only, so it is the `@acme/api/server` subpath, leaving `./client` free for a front end's RPC caller.
-- `apps/server` mounts `handler` at `/api`; `apps/tanstack` mounts `rpcHandler` at `/api/rpc` and reaches the same procedures in-process through `createApiClient`.
+- `packages/api` keeps `router` a concrete const: `restHandler` (REST) and `rpcHandler` (RPC) infer from it, as do the OpenAPI document and `createRpcServer`. A factory return type loses the procedure literals and infers `unknown`.
+- `packages/api` has no root entry, so the runtime decides the import: `@acme/api/server` is everything that runs on Workers — router, both handlers, `createRpcServer`, `safeCall` — and `@acme/api/client` is the browser's — the link and the TanStack Query utils built on it. The wrong one fails at build rather than at runtime.
+- `packages/api` never reads `cloudflare:workers`. `RpcServerContext` declares the bindings and the caller passes them — `restHandler.handle(request, { context: { Env } })`, `createRpcServer({ Env })` — because a shared package cannot name one `Env`.
+- `apps/server` mounts `restHandler` at `/api`; `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, calls `createRpcServer` in-process from its server functions, and reaches the same procedures from the browser through `createRpcClient`.
 - File and directory names are lowercase kebab-case, except names a tool dictates: `README.md`, `AGENTS.md`, `bun.lock`, `tsconfig.*.json`, `apps/tanstack/src/routes/__root.tsx`, `routeTree.gen.ts`.
 
 ## External References
