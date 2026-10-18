@@ -3,27 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
   "files": [
     "src"
   ],
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./schema": {
-      "types": "./src/schema.ts",
-      "default": "./src/schema.ts"
-    },
-    "./client": {
-      "types": "./src/client.ts",
-      "default": "./src/client.ts"
-    },
-    "./sql": {
-      "types": "./src/sql.ts",
-      "default": "./src/sql.ts"
-    },
+    "./schema": "./src/schema.ts",
+    "./client": "./src/client.ts",
+    "./sql": "./src/sql.ts",
     "./package.json": "./package.json"
   },
   "scripts": {

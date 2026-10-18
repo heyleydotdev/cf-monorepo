@@ -7,9 +7,6 @@
     "./base": "./base.js",
     "./react": "./react.js",
     "./drizzle": "./drizzle.js",
-    "./base.js": "./base.js",
-    "./react.js": "./react.js",
-    "./drizzle.js": "./drizzle.js",
     "./package.json": "./package.json"
   },
   "scripts": {

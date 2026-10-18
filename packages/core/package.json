@@ -3,20 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./notes": {
-      "types": "./src/services/notes.service.ts",
-      "default": "./src/services/notes.service.ts"
-    },
-    "./notes.schema": {
-      "types": "./src/schemas/notes.schema.ts",
-      "default": "./src/schemas/notes.schema.ts"
-    },
+    ".": "./src/index.ts",
+    "./notes": "./src/services/notes.service.ts",
+    "./notes.schema": "./src/schemas/notes.schema.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
