@@ -10,7 +10,6 @@
         "prettier": "catalog:",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "turbo": "^2.10.13",
-        "typescript": "catalog:",
       },
     },
     "apps/server": {
@@ -135,7 +134,6 @@
       "name": "@acme/ui",
       "version": "0.1.0",
       "dependencies": {
-        "@acme/core": "workspace:*",
         "@base-ui/react": "^1.8.0",
         "@fontsource-variable/geist": "^5.3.0",
         "class-variance-authority": "^0.7.1",
