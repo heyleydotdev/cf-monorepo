@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { NoteInput, NotePatchInput } from "@acme/core/notes.schema";
+import type { NoteInput, NotePatchInput } from "@acme/core/schemas/notes";
 import { INPUT_VALIDATION_FAILED, NOTE_NOT_FOUND } from "@acme/api/server";
 
 import {

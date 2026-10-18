@@ -4,7 +4,7 @@ import type {
   NoteInput,
   NoteParamInput,
   NoteUpdateInput,
-} from "@acme/core/notes.schema";
+} from "@acme/core/schemas/notes";
 import { safeCall } from "@acme/api/server";
 
 import { rpcServer } from "~/rpc/server";

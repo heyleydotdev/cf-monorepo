@@ -3,8 +3,8 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { formatDate, timeAgo } from "@acme/core";
-import { Note } from "@acme/core/notes.schema";
+import { Note } from "@acme/core/schemas/notes";
+import { formatDate, timeAgo } from "@acme/core/utils/time";
 import { Alert } from "@acme/ui/components/alert";
 import { Button } from "@acme/ui/components/button";
 import {

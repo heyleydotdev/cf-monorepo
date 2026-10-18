@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@acme/tsconfig/source-package.json",
   "compilerOptions": {
-    /* Environment: D1Database, which notes.service.ts reaches through the
-     * Database type it imports from @acme/db/client. */
+    /* Environment: D1Database, which notes.ts reaches through the Database
+     * type it imports from @acme/db/client. */
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["src"]

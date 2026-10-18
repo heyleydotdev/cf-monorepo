@@ -1,7 +1,3 @@
-export function createTitle(page: string, appName: string): string {
-  return `${page} - ${appName}`;
-}
-
 /**
  * "3 minutes ago". Buckets are deliberately coarse: the output is rendered on
  * the server and again on hydration, and a fine-grained relative time can land

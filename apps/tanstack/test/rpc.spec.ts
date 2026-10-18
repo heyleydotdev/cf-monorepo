@@ -1,7 +1,7 @@
 import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { NoteInput } from "@acme/core/notes.schema";
+import type { NoteInput } from "@acme/core/schemas/notes";
 import { createRpcClient } from "@acme/api/client";
 
 /**

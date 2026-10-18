@@ -1,13 +1,13 @@
 import { openapi } from "@orpc/openapi";
 
+import { Note, NoteParam, NoteUpdate } from "@acme/core/schemas/notes";
 import {
   createNote,
   deleteNote,
   getNote,
   listNotes,
   updateNote,
-} from "@acme/core/notes";
-import { Note, NoteParam, NoteUpdate } from "@acme/core/notes.schema";
+} from "@acme/core/services/notes";
 
 import { procedure } from "../context";
 import { NOTE_NOT_FOUND } from "../errors";

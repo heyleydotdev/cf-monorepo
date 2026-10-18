@@ -79,7 +79,7 @@ flowchart LR
     API --> CORE --> DB
 ```
 
-Every request path ends at the same `@acme/core` service, so changing the service changes all of them together.
+Every request path ends at the same core service, so changing the service changes all of them together. `packages/core` is transport-agnostic: no HTTP, no runtime bindings, no framework. Apps call in; it never calls back out.
 
 ## Quick start
 
@@ -118,8 +118,8 @@ A small, end-to-end example of the whole stack. Read it in one sitting, then del
 | Layer            | File                                                           |
 | ---------------- | -------------------------------------------------------------- |
 | Table            | `packages/db/src/schema.ts`                                    |
-| Queries          | `packages/core/src/services/notes.service.ts`                  |
-| Validation       | `packages/core/src/schemas/notes.schema.ts`                    |
+| Queries          | `packages/core/src/services/notes.ts`                          |
+| Validation       | `packages/core/src/schemas/notes.ts`                           |
 | HTTP routes      | `packages/api/src/routes/notes.ts`                             |
 | RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                        |
 | RPC client       | `apps/tanstack/src/rpc/client.ts`                              |
