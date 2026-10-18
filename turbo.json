@@ -4,14 +4,18 @@
   "globalDependencies": [".env*"],
   "tasks": {
     "generate-routes": {
+      "description": "TanStack Start: regenerate apps/tanstack/src/routeTree.gen.ts from the file routes",
       "outputs": ["src/routeTree.gen.ts"]
     },
     "build": {
       "dependsOn": ["generate-routes"],
       "outputs": ["dist/**", ".cache/**", ".tanstack/**", ".output/**"]
     },
-    "typegen": {},
+    "typegen": {
+      "description": "Wrangler: regenerate each app's committed worker-configuration.d.ts"
+    },
     "generate": {
+      "description": "Drizzle Kit: turn a schema change in packages/db into SQL migration files",
       "cache": false
     },
     "migrate": {
