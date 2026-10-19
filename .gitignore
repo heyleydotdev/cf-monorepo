@@ -23,8 +23,9 @@ build/Release/
 .eslintcache
 .stylelintcache
 
-# Test coverage
+# Test artifacts
 coverage/
+.vitest/
 *.lcov
 
 # Logs

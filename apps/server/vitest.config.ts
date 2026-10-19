@@ -15,5 +15,7 @@ export default defineConfig({
     testTimeout,
     setupFiles,
     provide,
+    // A spec that fails mid-test must not leave a spy installed for the next one.
+    restoreMocks: true,
   },
 });

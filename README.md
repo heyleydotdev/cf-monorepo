@@ -177,11 +177,13 @@ bun run typegen     # wrangler types -> worker-configuration.d.ts
 bun run deploy      # wrangler deploy
 
 cd apps/tanstack
+bun run test        # vitest in the Workers runtime
 bun run typegen
 bun run migrate     # local D1 (migrate:remote for the deployed one)
 bun run deploy      # build, then wrangler deploy
 
 cd apps/nextjs
+bun run test        # vitest in the Workers runtime
 bun run migrate     # local D1 (migrate:remote for the deployed one)
 bun run deploy      # vinext-cloudflare deploy (no typegen yet)
 ```
@@ -337,7 +339,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 ## Troubleshooting
 
 > [!WARNING]
-> **Use `bun run test`, never `bun test`.** Bun's own runner ignores `vitest.config.ts`, so the Workers pool and `cloudflare:test` imports do not exist and every spec fails to import.
+> **Use `bun run test`, never `bun test`.** Bun's own runner ignores `vitest.config.ts`, so the Workers pool and `cloudflare:test` imports do not exist and every spec fails to import. A root `bunx vitest` is the other trap: with no vitest at the root, bunx fetches the registry's latest major instead of the workspace's `catalog:` pin. Run tests through Turbo or from the app directory.
 
 > [!CAUTION]
 > **Keep prettier on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments (`Promise<Response>` becomes `Promise`). `format` still reports success, so `typecheck` is what catches it.
@@ -350,7 +352,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 
 - **`env` is a throwing proxy during `vite build`.** vinext prerenders every route (`prerender: { routes: "*" }`), and in that phase `cloudflare:workers`' `env` throws on any access, so a module that reads a binding at import time fails the build. `apps/nextjs` reads `env.DB` per call in `getRpcServer()`, and a D1-backed page sets `export const dynamic = "force-dynamic"` — without it vinext catches the throw and leaves the route unclassified.
 - **`apps/nextjs` needs its `postcss.config.js`.** vinext only reads an existing postcss config and never synthesizes one, so deleting it inlines `@import "tailwindcss"` verbatim: theme tokens appear, every utility class is missing, and nothing errors.
-- **`apps/nextjs`'s test worker restates its bindings.** The Vitest plugin cannot load `cloudflare.config.ts` under Bun, so `vitest.config.ts` declares `DB` through inline `miniflare` options. Its compatibility date trails the app's because the pool pins an older workerd.
+- **`apps/nextjs`'s test worker restates its bindings.** The Vitest plugin cannot load `cloudflare.config.ts` under Bun, so `vitest.config.ts` declares `DB` through inline `miniflare` options. Its compatibility date trails the app's because the pool pins an older workerd. The suite calls the actions and the route module directly, so it does not exercise the Worker entry or prove the binding name in the app config.
 - **Extensionless imports.** A `.ts` or `.js` extension in a source import is written into the emitted `.d.ts` and breaks dependents. (`allowImportingTsExtensions` in `apps/tanstack` is safe, since nothing consumes its declarations.)
 - **The `~/*` alias needs three parts in `apps/tanstack`**: tsconfig `paths`, plus `resolve.tsconfigPaths` in both `vite.config.ts` and `vitest.config.ts`. `apps/nextjs` needs it only in `vitest.config.ts`, because vinext reads the tsconfig paths in dev and build. Miss the test one and nothing fails until a spec loads an app module through the alias.
 - **`dev.port` must be a number** in `wrangler.jsonc`. The string form is rejected by `wrangler types`.
