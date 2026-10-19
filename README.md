@@ -77,6 +77,7 @@ flowchart LR
 
     S -- "/api (REST)<br/>/docs (Scalar + spec)" --> API
     T -- "/api/rpc (RPC)<br/>+ in-process calls" --> API
+    N -- "/api/rpc (RPC)<br/>+ in-process actions" --> API
     T --> UI
     N --> UI
     API --> CORE --> DB
