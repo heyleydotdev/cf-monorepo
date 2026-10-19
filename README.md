@@ -50,7 +50,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`apps/server`](apps/server)     | Cloudflare Worker. Mounts `packages/api` at `/api`, serving the Scalar reference at `/docs`, with Wrangler config and Vitest running in the Workers runtime. |
 | [`apps/tanstack`](apps/tanstack) | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                                                  |
-| [`apps/nextjs`](apps/nextjs)     | vinext (Next.js on Vite) app. React Server Components and the shared Tailwind theme; no `packages/api` mount or D1 binding yet.                              |
+| [`apps/nextjs`](apps/nextjs)     | vinext (Next.js on Vite) app. React Server Components, the shared Tailwind theme and D1, with the oRPC router mounted at `/api/rpc`.                         |
 | [`packages/api`](packages/api)   | oRPC router, both fetch handlers (`/server`) and the browser client (`/client`).                                                                             |
 | [`packages/core`](packages/core) | Transport-agnostic logic: the notes service, Zod schemas and shared helpers.                                                                                 |
 | [`packages/db`](packages/db)     | Drizzle on D1. Typed client and schema, plus migration generation.                                                                                           |
@@ -82,7 +82,7 @@ flowchart LR
     API --> CORE --> DB
 ```
 
-Every request path ends at the same core service, so changing the service changes all of them together. `packages/core` is transport-agnostic: no HTTP, no runtime bindings, no framework. Apps call in; it never calls back out. `apps/nextjs` reaches neither: it renders `packages/ui` and nothing else yet.
+Every request path ends at the same core service, so changing the service changes all of them together. `packages/core` is transport-agnostic: no HTTP, no runtime bindings, no framework. Apps call in; it never calls back out. `apps/nextjs` calls in too: its server actions use `createRpcServer`, and the browser reaches the same procedures at `/api/rpc`.
 
 ## Quick start
 
@@ -106,31 +106,31 @@ bun run dev               # server on :3001, tanstack on :3000, nextjs on :3002
 
 ### Apply the local database schema
 
-The notes page reads and writes D1 through a server function, so apply the schema once:
+The notes pages read and write D1 through the service layer, so apply the schema to each app you run:
 
 ```bash
-cd apps/tanstack && bun run migrate
+bun run migrate
 ```
 
-Local D1 needs no Cloudflare account.
+That runs `migrate` in every app, each against its own local database. Local D1 needs no Cloudflare account.
 
 ## The notes example
 
 A small, end-to-end example of the whole stack. Read it in one sitting, then delete it when it has served its purpose.
 
-| Layer            | File                                                           |
-| ---------------- | -------------------------------------------------------------- |
-| Table            | `packages/db/src/schema.ts`                                    |
-| Queries          | `packages/core/src/services/notes.ts`                          |
-| Validation       | `packages/core/src/schemas/notes.ts`                           |
-| HTTP routes      | `packages/api/src/routes/notes.ts`                             |
-| RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`                        |
-| RPC client       | `apps/tanstack/src/rpc/client.ts`                              |
-| RPC server       | `apps/tanstack/src/rpc/server.ts`                              |
-| Server functions | `apps/tanstack/src/lib/server-fns.ts`                          |
-| Components       | `packages/ui/src/components/*.tsx` (shadcn)                    |
-| Page             | `apps/tanstack/src/routes/index.tsx`                           |
-| Tests            | `apps/server/test/api.spec.ts`, `apps/tanstack/test/*.spec.ts` |
+| Layer            | File                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| Table            | `packages/db/src/schema.ts`                                                                           |
+| Queries          | `packages/core/src/services/notes.ts`                                                                 |
+| Validation       | `packages/core/src/schemas/notes.ts`                                                                  |
+| HTTP routes      | `packages/api/src/routes/notes.ts`                                                                    |
+| RPC endpoint     | `apps/tanstack/src/routes/api/rpc.$.ts`, `apps/nextjs/app/api/rpc/[[...rest]]/route.ts`               |
+| RPC client       | `apps/tanstack/src/rpc/client.ts`, `apps/nextjs/rpc/client.ts`                                        |
+| RPC server       | `apps/tanstack/src/rpc/server.ts`, `apps/nextjs/rpc/server.ts`                                        |
+| Server functions | `apps/tanstack/src/lib/server-fns.ts`, `apps/nextjs/app/actions.ts` (server actions)                  |
+| Components       | `packages/ui/src/components/*.tsx` (shadcn)                                                           |
+| Page             | `apps/tanstack/src/routes/index.tsx`, `apps/nextjs/app/page.tsx` and `apps/nextjs/app/components.tsx` |
+| Tests            | `apps/server/test/api.spec.ts`, `apps/tanstack/test/*.spec.ts`                                        |
 
 Everything under the example is meant to outlive it: the service layer pattern, the schemas, the D1 setup and the shared tooling.
 
@@ -148,7 +148,7 @@ Every task runs through Turbo, so `--filter` scopes any of them.
 | `bun run format`         | Check formatting                                        |
 | `bun run format:write`   | Fix formatting                                          |
 | `bun run generate`       | `drizzle-kit generate`: turn a schema change into SQL   |
-| `bun run migrate`        | Apply pending SQL to local D1                           |
+| `bun run migrate`        | Apply pending SQL to each local D1                      |
 | `bun run migrate:remote` | Apply pending SQL to the deployed D1                    |
 | `bun run typegen`        | `wrangler types` into `apps/server` and `apps/tanstack` |
 
@@ -181,7 +181,8 @@ bun run migrate     # local D1 (migrate:remote for the deployed one)
 bun run deploy      # build, then wrangler deploy
 
 cd apps/nextjs
-bun run deploy      # vinext-cloudflare deploy (no typegen or migrate yet)
+bun run migrate     # local D1 (migrate:remote for the deployed one)
+bun run deploy      # vinext-cloudflare deploy (no typegen yet)
 ```
 
 </details>
@@ -196,19 +197,19 @@ Prettier can break types in this setup, so typecheck right after formatting.
 
 ## Deploying
 
-1. **Create the database.** Paste the returned id over the placeholder `database_id` in both `apps/server/wrangler.jsonc` and `apps/tanstack/wrangler.jsonc`.
+1. **Create the database.** Paste the returned id over the placeholder in `apps/server/wrangler.jsonc`, `apps/tanstack/wrangler.jsonc` and `apps/nextjs/cloudflare.config.ts` — in `apps/nextjs` it also appears in the `migrate` scripts.
 
    ```bash
    cd apps/server && bunx wrangler d1 create acme-db
    ```
 
-2. **Apply migrations once.** `apps/server` and `apps/tanstack` point at that same database, so running the root script would apply them twice.
+2. **Apply migrations once.** All three apps point at that same database, so running the root script would apply them three times.
 
    ```bash
    bunx turbo migrate:remote --filter=@acme/server
    ```
 
-3. **Set secrets.** Never put them in `wrangler.jsonc`, and run this in whichever app needs the secret.
+3. **Set secrets.** Never put them in `wrangler.jsonc` (or `cloudflare.config.ts`), and run this in whichever app needs the secret.
 
    ```bash
    cd apps/server && bunx wrangler secret put <NAME>
@@ -222,7 +223,7 @@ Prettier can break types in this setup, so typecheck right after formatting.
    cd apps/nextjs   && bun run deploy
    ```
 
-Both dev servers read the root `.env`: `apps/server` passes `--env-file ../../.env`, and `apps/tanstack` sets Vite's `envDir` to the repo root. `apps/nextjs` reads neither yet: `vite.config.ts` sets no `envDir`.
+Each dev server reads the root `.env`: `apps/server` passes `--env-file ../../.env`, and both Vite apps set `envDir` to the repo root.
 
 ## How it fits together
 
@@ -237,8 +238,8 @@ Every package maps `types` and `default` to the same `src/*.ts` path, so nothing
 <summary><b>Three ways in, one router</b></summary>
 
 - **REST:** `apps/server` mounts `restHandler` from `packages/api` at `/api`. This is the external HTTP surface. Paths and methods come from each procedure's `openapi()` metadata, and the same handler serves the Scalar reference at `/docs` with its OpenAPI document at `/docs/spec.json`. Those two stay absolute: the reference plugin resolves them against the handler's mount prefix, not the router's `openapi()` one.
-- **RPC:** `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, serving the same procedures over oRPC's native protocol for any client typed by `Router`.
-- **In-process:** the TanStack app's own loaders use the server functions in `src/lib/`, which call procedures through `createRpcServer` without a request leaving the Worker. The one browser call (the server-time widget) goes through `createRpcClient` in `src/rpc/client.ts`.
+- **RPC:** `apps/tanstack` and `apps/nextjs` mount `rpcHandler` at `/api/rpc`, serving the same procedures over oRPC's native protocol for any client typed by `Router`.
+- **In-process:** the TanStack app's loaders use the server functions in `src/lib/`, which call procedures through `createRpcServer` without a request leaving the Worker; `apps/nextjs` reaches the same procedures through the server actions in `app/actions.ts`, where `getRpcServer()` builds the client per call, so the page and the browser's mutations share one layer. The browser-side time query goes through `createRpcClient`, in `apps/tanstack/src/rpc/client.ts` and `apps/nextjs/rpc/client.ts`.
 
 Every path runs the same procedure, and a procedure owns its own validation. Both handlers share one `errorStatusMap`, so they cannot disagree about a status either.
 
@@ -287,7 +288,7 @@ Each package is listed rather than globbed: a glob over `packages/*` works, but 
 <details>
 <summary><b>One tsconfig per runtime</b></summary>
 
-Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` runs `vite build` alone.
+Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` builds with `vite build` alone and typechecks its two references with `tsc --noEmit -p`.
 
 | Extends                                | For                                                    |
 | -------------------------------------- | ------------------------------------------------------ |
@@ -328,7 +329,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 ## Making it yours
 
 1. **Rename the scope.** The boilerplate uses `@acme/*` and a database named `acme-db`. Search the repo for `acme` and replace it with your own names, then run `bun install`.
-2. **Delete the notes example.** Remove the notes service, the `Note*` schemas and their exports from `packages/db/src/schema.ts`, `packages/api/src/routes/notes.ts`, `apps/tanstack/src/lib/server-fns.ts` (its `serverTimeFn` belongs to the demo page too), the demo page and the specs, then the references to them. Keep the schema module, the router, both handlers and the UI primitives.
+2. **Delete the notes example.** Remove the notes service, the `Note*` schemas and their exports from `packages/db/src/schema.ts`, `packages/api/src/routes/notes.ts`, `apps/tanstack/src/lib/server-fns.ts` and `apps/nextjs/app/actions.ts` (their `serverTime` belongs to the demo page too), the demo pages (`apps/tanstack/src/routes/index.tsx`, `apps/nextjs/app/page.tsx` and `apps/nextjs/app/components.tsx`) and the specs, then the references to them. Keep the schema module, the router, both handlers and the UI primitives.
 3. **Add your schema.** Edit `packages/db/src/schema.ts`, run `bun run generate`, then `bun run migrate`.
 4. **Add your procedures** in `packages/api`, backed by services in `packages/core`.
 
@@ -341,11 +342,13 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 > **Keep prettier on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments (`Promise<Response>` becomes `Promise`). `format` still reports success, so `typecheck` is what catches it.
 
 > [!WARNING]
-> **The two Worker apps keep separate local D1 databases.** Each has its own `.wrangler/state`, so a note created in `apps/server` is invisible to `apps/tanstack` until deploy, where a shared `database_id` makes them one. Run `bun run migrate` in whichever app you are working in. `apps/nextjs` declares no D1 binding, so it has no local database at all.
+> **Each app keeps its own local D1 database.** `apps/server` and `apps/tanstack` write to `.wrangler/state`, and `apps/nextjs` to `.cloudflare/state`, so a note created in one app is invisible to the others until deploy, where all three share the `acme-db` database. `bun run migrate` applies `packages/db/migrations` to the app you run it in; in `apps/nextjs` it passes the binding's id and `--persist-to .cloudflare/state` so `cf` opens the dev server's database instead of an empty one.
 
 <details>
 <summary><b>More gotchas</b></summary>
 
+- **`env` is a throwing proxy during `vite build`.** vinext prerenders every route (`prerender: { routes: "*" }`), and in that phase `cloudflare:workers`' `env` throws on any access, so a module that reads a binding at import time fails the build. `apps/nextjs` reads `env.DB` per call in `getRpcServer()`, and a D1-backed page sets `export const dynamic = "force-dynamic"` — without it vinext catches the throw and leaves the route unclassified.
+- **`apps/nextjs` needs its `postcss.config.js`.** vinext only reads an existing postcss config and never synthesizes one, so deleting it inlines `@import "tailwindcss"` verbatim: theme tokens appear, every utility class is missing, and nothing errors.
 - **Extensionless imports.** A `.ts` or `.js` extension in a source import is written into the emitted `.d.ts` and breaks dependents. (`allowImportingTsExtensions` in `apps/tanstack` is safe, since nothing consumes its declarations.)
 - **The `~/*` alias needs three parts** in `apps/tanstack`: tsconfig `paths`, plus `resolve.tsconfigPaths` in both `vite.config.ts` and `vitest.config.ts`. Miss the test one and nothing fails until a spec loads a route module through the router.
 - **`dev.port` must be a number** in `wrangler.jsonc`. The string form is rejected by `wrangler types`.

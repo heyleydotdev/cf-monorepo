@@ -4,7 +4,7 @@ import { env } from "cloudflare:workers";
 import { rpcHandler } from "@acme/api/server";
 
 /**
- * The router over oRPC's own RPC protocol, at POST /api/rpc/<procedure path>. The
+ * The router over oRPC's RPC protocol, at `/api/rpc/<procedure path>`. The
  * browser calls it through `rpcClient` in src/rpc/client.ts; loaders and server
  * functions reach the same procedures in-process through `rpcServer`.
  */
