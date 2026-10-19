@@ -130,7 +130,7 @@ A small, end-to-end example of the whole stack. Read it in one sitting, then del
 | Server functions | `apps/tanstack/src/lib/server-fns.ts`, `apps/nextjs/app/actions.ts` (server actions)                  |
 | Components       | `packages/ui/src/components/*.tsx` (shadcn)                                                           |
 | Page             | `apps/tanstack/src/routes/index.tsx`, `apps/nextjs/app/page.tsx` and `apps/nextjs/app/components.tsx` |
-| Tests            | `apps/server/test/api.spec.ts`, `apps/tanstack/test/*.spec.ts`                                        |
+| Tests            | `apps/server/test/api.spec.ts`, `apps/tanstack/test/*.spec.ts`, `apps/nextjs/test/*.spec.ts`          |
 
 Everything under the example is meant to outlive it: the service layer pattern, the schemas, the D1 setup and the shared tooling.
 
@@ -288,7 +288,7 @@ Each package is listed rather than globbed: a glob over `packages/*` works, but 
 <details>
 <summary><b>One tsconfig per runtime</b></summary>
 
-Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` builds with `vite build` alone and typechecks its two references with `tsc --noEmit -p`.
+Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` builds with `vite build` alone and typechecks its three references with `tsc --noEmit -p`.
 
 | Extends                                | For                                                    |
 | -------------------------------------- | ------------------------------------------------------ |
@@ -349,8 +349,9 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 
 - **`env` is a throwing proxy during `vite build`.** vinext prerenders every route (`prerender: { routes: "*" }`), and in that phase `cloudflare:workers`' `env` throws on any access, so a module that reads a binding at import time fails the build. `apps/nextjs` reads `env.DB` per call in `getRpcServer()`, and a D1-backed page sets `export const dynamic = "force-dynamic"` — without it vinext catches the throw and leaves the route unclassified.
 - **`apps/nextjs` needs its `postcss.config.js`.** vinext only reads an existing postcss config and never synthesizes one, so deleting it inlines `@import "tailwindcss"` verbatim: theme tokens appear, every utility class is missing, and nothing errors.
+- **`apps/nextjs`'s test worker restates its bindings.** The Vitest plugin cannot load `cloudflare.config.ts` under Bun, so `vitest.config.ts` declares `DB` through inline `miniflare` options. Its compatibility date trails the app's because the pool pins an older workerd.
 - **Extensionless imports.** A `.ts` or `.js` extension in a source import is written into the emitted `.d.ts` and breaks dependents. (`allowImportingTsExtensions` in `apps/tanstack` is safe, since nothing consumes its declarations.)
-- **The `~/*` alias needs three parts** in `apps/tanstack`: tsconfig `paths`, plus `resolve.tsconfigPaths` in both `vite.config.ts` and `vitest.config.ts`. Miss the test one and nothing fails until a spec loads a route module through the router.
+- **The `~/*` alias needs three parts in `apps/tanstack`**: tsconfig `paths`, plus `resolve.tsconfigPaths` in both `vite.config.ts` and `vitest.config.ts`. `apps/nextjs` needs it only in `vitest.config.ts`, because vinext reads the tsconfig paths in dev and build. Miss the test one and nothing fails until a spec loads an app module through the alias.
 - **`dev.port` must be a number** in `wrangler.jsonc`. The string form is rejected by `wrangler types`.
 - **Public env vars use the `VITE_` prefix.** That matches what Turbo hashes automatically, so no `env` entry is needed in `turbo.json`. Add a typed entry to `ImportMetaEnv` in `apps/tanstack/src/env.d.ts`. Do not override `envPrefix`.
 - **`VITE_` vars are build-time.** Vite compiles them into the bundles, so they cannot hold a value the Worker needs at request time. Use a binding or a secret for those.

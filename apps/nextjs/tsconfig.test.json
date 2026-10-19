@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    /* vitest.config.ts imports @acme/vitest, whose relative imports carry a
+     * real .ts extension. Node loads that package natively, so it needs a
+     * type-stripping runtime and the same allowance here. */
+    "allowImportingTsExtensions": true
+  },
+  "include": ["test/**/*.ts", "vitest.config.ts", ".cloudflare/types"],
+  "exclude": []
+}

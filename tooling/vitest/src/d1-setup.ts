@@ -3,10 +3,10 @@ import { env } from "cloudflare:workers";
 import { beforeAll, inject } from "vitest";
 
 /**
- * The D1 binding every app names `DB` in its own `wrangler.jsonc`. Declared
- * here rather than imported from `Env`, which `wrangler types` generates per
- * app: a shared package has no single `Env` to name, and the cast is the honest
- * version of that. A rename in an app shows up as this test failing.
+ * The D1 binding every app names `DB` in its own config. Declared here rather
+ * than imported from `Env`, which is generated per app: a shared package has no
+ * single `Env` to name, and the cast is the honest version of that. A rename in
+ * an app shows up as this test failing.
  */
 const { DB } = env as unknown as { DB: D1Database };
 

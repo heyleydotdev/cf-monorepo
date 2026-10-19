@@ -32,7 +32,9 @@
         "@acme/eslint": "workspace:*",
         "@acme/prettier": "workspace:*",
         "@acme/tsconfig": "workspace:*",
+        "@acme/vitest": "workspace:*",
         "@cloudflare/vite-plugin": "^2.0.0-beta.v.1",
+        "@cloudflare/vitest-plugin": "catalog:",
         "@tailwindcss/postcss": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
@@ -45,6 +47,7 @@
         "tailwindcss": "catalog:",
         "typescript": "catalog:",
         "vite": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "apps/server": {

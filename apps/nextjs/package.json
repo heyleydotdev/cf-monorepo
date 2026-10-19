@@ -10,8 +10,10 @@
     "deploy": "vinext-cloudflare deploy",
     "migrate": "cf d1 migrations apply 11111111-1111-4111-8111-111111111111 --local --persist-to .cloudflare/state --dir ../../packages/db/migrations",
     "migrate:remote": "cf d1 migrations apply 11111111-1111-4111-8111-111111111111 --remote --dir ../../packages/db/migrations",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.test.json",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore"
   },
@@ -32,7 +34,9 @@
     "@acme/eslint": "workspace:*",
     "@acme/prettier": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@acme/vitest": "workspace:*",
     "@cloudflare/vite-plugin": "^2.0.0-beta.v.1",
+    "@cloudflare/vitest-plugin": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
@@ -44,7 +48,8 @@
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@acme/prettier"
 }
