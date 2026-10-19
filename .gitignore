@@ -47,9 +47,15 @@ pnpm-debug.log*
 # Cloudflare Wrangler
 .wrangler/
 
-# TanStack Start
+# TanStack Start (apps/tanstack)
 .tanstack/
 apps/tanstack/src/routeTree.gen.ts
+
+# vinext (apps/nextjs)
+.next/
+.vinext/
+.cloudflare/
+next-env.d.ts
 
 # Editors & OS
 .vscode/*

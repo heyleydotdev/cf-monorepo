@@ -32,20 +32,23 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 
 ## Traps
 
-**Read the Troubleshooting section in `README.md` first.** It covers the runners, prettier versions, the `~/*` alias halves, `dev.port`, the `VITE_` prefix, and the two apps' separate local D1. The entries below are not in it.
+**Read the Troubleshooting section in `README.md` first.** It covers the runners, prettier versions, the `~/*` alias halves, `dev.port`, the `VITE_` prefix, and the apps' separate local D1. The entries below are not in it.
 
 - **`includeIgnoreFile` needs `gitignoreResolution: true`.** `@acme/eslint` lives in `tooling/eslint/`, so the default resolves root `.gitignore` patterns against that directory, matches nothing, and looks like it works.
 - **`ViteTypeOptions.strictImportMetaEnv` is what makes env vars type-checked.** Without it vite types `import.meta.env` as `Record<string, any>`, so a misspelling compiles and inlines as `undefined`.
 - **Do not override `envPrefix` to avoid the `VITE_` prefix.** A custom prefix must also be declared in turbo's task `env` and in `ImportMetaEnv`; miss one and it is a stale bundle or a type error.
 - **The OpenAPI reference plugin ignores the router's `openapi()` prefix.** Its `docsPath` and `specPath` resolve against the handle-time `prefix`, which `apps/server` does not pass, so they stay absolute (`/docs`, `/docs/spec.json`) while procedures sit under `/api`. Passing `prefix: "/api"` to `handle()` double-prefixes the procedures instead of moving the docs.
-- **Root `dev` stays `persistent: false`; each app opts in through its own `turbo.json`.** `apps/server` and `apps/tanstack` each override only `dev.persistent` behind `"extends": ["//"]`, inheriting `cache: false` and `dependsOn: ["^dev"]` from the root. The other eight workspaces have no `dev` script and resolve a transit node, so the root only ever describes packages that never run a dev server; `persistent` belongs to the apps that do.
+- **Root `dev` stays `persistent: false`; each app opts in through its own `turbo.json`.** `apps/server`, `apps/tanstack` and `apps/nextjs` each override only `dev.persistent` behind `"extends": ["//"]`, inheriting `cache: false` and `dependsOn: ["^dev"]` from the root. The other eight workspaces have no `dev` script and resolve a transit node, so the root only ever describes packages that never run a dev server; `persistent` belongs to the apps that do.
+- **`eslint-config-next` cannot be used in `apps/nextjs`.** Its `dist/parser.js` requires the real `next` package, and vinext emulates `next` through `vinext/types` without installing it. `@acme/eslint/nextjs` uses `@next/eslint-plugin-next` directly, which is the plugin-only recipe the Next docs give for this case.
+- **`apps/nextjs` needs a `postcss.config.js`, or Tailwind silently does nothing.** vinext reads an existing postcss config (`vinext/dist/plugins/postcss.js`) and never synthesizes one, so without the file `@import "tailwindcss"` is inlined verbatim: theme tokens appear, every utility class is missing, and nothing errors.
+- **Root `build.outputs` names `.cloudflare/output/**`, never `.cloudflare/**`.** The same directory holds live miniflare state (`.cloudflare/state/{d1,kv,r2,do}`) and generated types. Widening the glob caches a running database into the task archive, so a cache hit would restore stale D1 rows.
 
 ## Key Conventions
 
 - No package compiles: `types` and `default` both point at `src/*.ts`, no `dist`, no `build` script. `@acme/tsconfig/compiled-package.json` is the npm-published exception and is currently unused.
 - `apps/tanstack/src/routeTree.gen.ts` is generated and gitignored. Regenerate with `bunx turbo generate-routes --filter=@acme/tanstack`; `build`, `typecheck` and `lint` depend on it.
-- Both apps have a committed `worker-configuration.d.ts` from `bun run typegen`. Re-run typegen after touching that app's `wrangler.jsonc`, commit the result, and keep the file in the app's tsconfig `include` or its bindings do not resolve.
-- Both apps typecheck through project references, so `eslint.config.js` must list every referenced tsconfig in `parserOptions.project`.
+- **`apps/server` and `apps/tanstack` each have a committed `worker-configuration.d.ts`** from `bun run typegen`. Re-run typegen after touching that app's `wrangler.jsonc`, commit the result, and keep the file in the app's tsconfig `include` or its bindings do not resolve. `apps/nextjs` has no `typegen` script and no committed types yet: it declares its Worker in `cloudflare.config.ts`, not `wrangler.jsonc`.
+- Each app's root tsconfig uses project references, so `eslint.config.js` must list every referenced tsconfig in `parserOptions.project`.
 - `typecheck` waits on `typecheck-transit`, not `^typecheck`, so a dependency change invalidates a dependent without serializing every package first.
 - A new public env var needs an `ImportMetaEnv` entry in `apps/tanstack/src/env.d.ts` and nothing in `turbo.json`.
 - Root files are formatted by the `//#format:root` task. A new root file type means a new glob in `turbo.json` and in both `format:root` scripts; the globs skip `bun.lock` and `.env.example` on purpose.
@@ -53,6 +56,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - `packages/api` has no root entry, so the runtime decides the import: `@acme/api/server` is everything that runs on Workers — router, both handlers, `createRpcServer`, `safeCall` — and `@acme/api/client` is the browser's — the link and the TanStack Query utils built on it. The wrong one fails at build rather than at runtime.
 - `packages/api` never reads `cloudflare:workers`. `RpcServerContext` declares the bindings and the caller passes them — `restHandler.handle(request, { context: { Env } })`, `createRpcServer({ Env })` — because a shared package cannot name one `Env`.
 - `apps/server` mounts `restHandler` at `/api` (Scalar reference at `/docs`, its spec at `/docs/spec.json`); `apps/tanstack` mounts `rpcHandler` at `/api/rpc`, calls `createRpcServer` in-process from its server functions, and reaches the same procedures from the browser through `createRpcClient`.
+- `apps/nextjs` is the third app and the odd one out on purpose: vinext emulates Next.js on Vite, so it has no `wrangler.jsonc` (the Worker lives in `cloudflare.config.ts`), no `typegen`, no test suite and no `packages/api` mount. It consumes `packages/ui` only.
 - File and directory names are lowercase kebab-case, except names a tool dictates: `README.md`, `AGENTS.md`, `bun.lock`, `tsconfig.*.json`, `apps/tanstack/src/routes/__root.tsx`, `routeTree.gen.ts`.
 
 ## External References

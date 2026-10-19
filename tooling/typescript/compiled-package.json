@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
   "compilerOptions": {
-    /* Modules: bundled library, sources consumed directly */
+    /* Modules: bundled library, sources consumed directly. */
     "module": "esnext",
     "moduleResolution": "bundler",
 
-    /* Emit declarations only; consumers bundle TS sources directly */
+    /* Emit declarations only; consumers bundle TS sources directly. */
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,

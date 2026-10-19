@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 import { provide, setupFiles, testTimeout } from "@acme/vitest";
 
 export default defineConfig({
-  // The `~/*` alias lives in tsconfig paths, which only Vite reads with this on.
+  // Vite reads the `~/*` alias from tsconfig paths only with this on.
   // Without it here, a test that loads a route module through the router cannot
   // resolve the app's own imports — see README.
   resolve: { tsconfigPaths: true },

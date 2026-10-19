@@ -1,0 +1,12 @@
+@import "@acme/ui/globals.css";
+
+/*
+ * Tailwind scans from the app root, so classes inside a workspace package are
+ * invisible and get dropped silently. Relative to this file.
+ *
+ * Each package is listed rather than globbed: a glob over packages/* works,
+ * but a class in a package this app does not render still reaches the output,
+ * and two frontends sharing packages/ui would each ship CSS for components
+ * they never use.
+ */
+@source "../../../packages/ui/src";

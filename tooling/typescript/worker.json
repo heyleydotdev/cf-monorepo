@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
   "compilerOptions": {
-    /* Modules: bundled Worker, sources consumed directly */
+    /* Modules: bundled Worker, sources consumed directly. */
     "module": "es2022",
     "moduleResolution": "bundler",
 
-    /* Environment: Workers runtime globals (Request/Response/fetch) */
+    /* Environment: Workers runtime globals (Request, Response, fetch). */
     "types": ["@cloudflare/workers-types"]
   }
 }

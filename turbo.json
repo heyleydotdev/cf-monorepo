@@ -9,7 +9,13 @@
     },
     "build": {
       "dependsOn": ["generate-routes"],
-      "outputs": ["dist/**", ".cache/**", ".tanstack/**", ".output/**"]
+      "outputs": [
+        "dist/**",
+        ".cache/**",
+        ".tanstack/**",
+        ".output/**",
+        ".cloudflare/output/**"
+      ]
     },
     "typegen": {
       "description": "Wrangler: regenerate each app's committed worker-configuration.d.ts"

@@ -25,7 +25,7 @@ export default defineConfig([
     },
   },
   {
-    // Type-aware rules: require parserOptions.project (set per package)
+    // Type-aware rules: require parserOptions.project (set per package).
     files: ["**/*.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-misused-promises": [

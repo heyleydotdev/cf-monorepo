@@ -6,7 +6,7 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  // So Vite resolves the `~/*` alias declared in tsconfig paths.
+  // Vite reads the `~/*` alias from tsconfig paths only with this on.
   resolve: { tsconfigPaths: true },
   // The shared .env sits at the repo root, not in this app. envPrefix is left
   // at the Vite default of VITE_ so vite and turbo agree on which vars are

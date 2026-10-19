@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@acme/tsconfig/browser.json",
   "compilerOptions": {
-    /* Bundler-only: lets source imports carry a .ts extension */
+    /* Bundler-only: lets source imports carry a .ts extension. */
     "allowImportingTsExtensions": true,
 
     /* src/server.ts and the api routes it pulls in run on Workers, so the

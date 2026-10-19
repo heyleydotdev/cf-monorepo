@@ -1,0 +1,42 @@
+{
+  "name": "@acme/nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite preview",
+    "deploy": "vinext-cloudflare deploy",
+    "lint": "eslint .",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format:write": "prettier --write . --ignore-path ../../.gitignore"
+  },
+  "dependencies": {
+    "@acme/ui": "workspace:*",
+    "@vinext/cloudflare": "^1.1.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-server-dom-webpack": "^19.3.1",
+    "vinext": "^1.2.1"
+  },
+  "devDependencies": {
+    "@acme/eslint": "workspace:*",
+    "@acme/prettier": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "@cloudflare/vite-plugin": "^2.0.0-beta.v.1",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "@vitejs/plugin-rsc": "^0.5.38",
+    "cf": "^1.0.0-beta.18",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  },
+  "prettier": "@acme/prettier"
+}

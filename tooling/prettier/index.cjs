@@ -11,6 +11,7 @@ const config = {
   importOrder: [
     "<TYPES>",
     "^(react/(.*)$)|^(react$)",
+    "^(next/(.*)$)|^(next$)",
     "<THIRD_PARTY_MODULES>",
     "",
     "<TYPES>^@acme",

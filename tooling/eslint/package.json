@@ -6,6 +6,7 @@
   "exports": {
     "./base": "./base.js",
     "./react": "./react.js",
+    "./nextjs": "./nextjs.js",
     "./drizzle": "./drizzle.js",
     "./package.json": "./package.json"
   },
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "16.4.2",
     "eslint": "catalog:",
     "eslint-config-turbo": "^2.11.7",
     "eslint-plugin-drizzle": "^0.2.3",

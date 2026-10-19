@@ -3,7 +3,7 @@
 # Cloudflare Monorepo
 
 **A Bun + Turborepo boilerplate for Cloudflare Workers.**
-Two deployable apps, one shared service layer, and a worked example that touches every layer.
+Three deployable apps, one shared service layer, and a worked example that touches every layer.
 
 [![Bun](https://img.shields.io/badge/Bun-1.4.2-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.18-3c873a?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
@@ -35,14 +35,14 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 
 ## Tech stack
 
-| Area                 | Tools                                                     |
-| -------------------- | --------------------------------------------------------- |
-| Runtime and platform | Cloudflare Workers, D1, Wrangler                          |
-| Monorepo             | Bun workspaces (with a shared version catalog), Turborepo |
-| API                  | oRPC (REST via OpenAPI adapter, plus native RPC), Zod     |
-| Database             | Drizzle ORM on D1                                         |
-| Frontend             | TanStack Start (React SSR), Tailwind CSS 4, shadcn/ui     |
-| Quality              | TypeScript, ESLint, Prettier, Vitest (Workers runtime)    |
+| Area                 | Tools                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| Runtime and platform | Cloudflare Workers, D1, Wrangler                                            |
+| Monorepo             | Bun workspaces (with a shared version catalog), Turborepo                   |
+| API                  | oRPC (REST via OpenAPI adapter, plus native RPC), Zod                       |
+| Database             | Drizzle ORM on D1                                                           |
+| Frontend             | TanStack Start (React SSR), vinext (Next.js on Vite), Tailwind 4, shadcn/ui |
+| Quality              | TypeScript, ESLint, Prettier, Vitest (Workers runtime)                      |
 
 ## Workspaces
 
@@ -50,6 +50,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`apps/server`](apps/server)     | Cloudflare Worker. Mounts `packages/api` at `/api`, serving the Scalar reference at `/docs`, with Wrangler config and Vitest running in the Workers runtime. |
 | [`apps/tanstack`](apps/tanstack) | TanStack Start app. React SSR, file-based routing, Tailwind 4, deployed through the Cloudflare Vite plugin.                                                  |
+| [`apps/nextjs`](apps/nextjs)     | vinext (Next.js on Vite) app. React Server Components and the shared Tailwind theme; no `packages/api` mount or D1 binding yet.                              |
 | [`packages/api`](packages/api)   | oRPC router, both fetch handlers (`/server`) and the browser client (`/client`).                                                                             |
 | [`packages/core`](packages/core) | Transport-agnostic logic: the notes service, Zod schemas and shared helpers.                                                                                 |
 | [`packages/db`](packages/db)     | Drizzle on D1. Typed client and schema, plus migration generation.                                                                                           |
@@ -57,7 +58,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 | [`tooling/*`](tooling)           | Shared tsconfig, ESLint, Prettier and Vitest configs, published internally as `@acme/*`.                                                                     |
 
 > [!NOTE]
-> Only two apps ship today. Adding another is a copy-and-rename job, see [Adding a workspace](#adding-a-workspace).
+> Only three apps ship today. Adding another is a copy-and-rename job, see [Adding a workspace](#adding-a-workspace).
 
 ## Architecture
 
@@ -66,6 +67,7 @@ flowchart LR
     subgraph Apps
         S["apps/server<br/><sub>Cloudflare Worker</sub>"]
         T["apps/tanstack<br/><sub>TanStack Start</sub>"]
+        N["apps/nextjs<br/><sub>Next.js on Vite</sub>"]
     end
 
     API["packages/api<br/><sub>oRPC router</sub>"]
@@ -76,10 +78,11 @@ flowchart LR
     S -- "/api (REST)<br/>/docs (Scalar + spec)" --> API
     T -- "/api/rpc (RPC)<br/>+ in-process calls" --> API
     T --> UI
+    N --> UI
     API --> CORE --> DB
 ```
 
-Every request path ends at the same core service, so changing the service changes all of them together. `packages/core` is transport-agnostic: no HTTP, no runtime bindings, no framework. Apps call in; it never calls back out.
+Every request path ends at the same core service, so changing the service changes all of them together. `packages/core` is transport-agnostic: no HTTP, no runtime bindings, no framework. Apps call in; it never calls back out. `apps/nextjs` reaches neither: it renders `packages/ui` and nothing else yet.
 
 ## Quick start
 
@@ -95,7 +98,7 @@ Every request path ends at the same core service, so changing the service change
 git clone https://github.com/heyleydotdev/cf-monorepo && cd cf-monorepo
 cp .env.example .env      # nothing here is required to boot
 bun install
-bun run dev               # server on :3001, tanstack on :3000
+bun run dev               # server on :3001, tanstack on :3000, nextjs on :3002
 ```
 
 > [!NOTE]
@@ -135,19 +138,19 @@ Everything under the example is meant to outlive it: the service layer pattern, 
 
 Every task runs through Turbo, so `--filter` scopes any of them.
 
-| Command                  | What it does                                                 |
-| ------------------------ | ------------------------------------------------------------ |
-| `bun run dev`            | Start all dev servers in watch mode                          |
-| `bun run build`          | Bundle the apps (no package emits anything)                  |
-| `bun run typecheck`      | Typecheck every workspace                                    |
-| `bun run test`           | Run all tests                                                |
-| `bun run lint`           | Lint every workspace                                         |
-| `bun run format`         | Check formatting                                             |
-| `bun run format:write`   | Fix formatting                                               |
-| `bun run generate`       | `drizzle-kit generate`: turn a schema change into SQL        |
-| `bun run migrate`        | Apply pending SQL to local D1                                |
-| `bun run migrate:remote` | Apply pending SQL to the deployed D1                         |
-| `bun run typegen`        | `wrangler types` into each app's `worker-configuration.d.ts` |
+| Command                  | What it does                                            |
+| ------------------------ | ------------------------------------------------------- |
+| `bun run dev`            | Start all dev servers in watch mode                     |
+| `bun run build`          | Bundle the apps (no package emits anything)             |
+| `bun run typecheck`      | Typecheck every workspace                               |
+| `bun run test`           | Run all tests                                           |
+| `bun run lint`           | Lint every workspace                                    |
+| `bun run format`         | Check formatting                                        |
+| `bun run format:write`   | Fix formatting                                          |
+| `bun run generate`       | `drizzle-kit generate`: turn a schema change into SQL   |
+| `bun run migrate`        | Apply pending SQL to local D1                           |
+| `bun run migrate:remote` | Apply pending SQL to the deployed D1                    |
+| `bun run typegen`        | `wrangler types` into `apps/server` and `apps/tanstack` |
 
 `format` also covers files owned by no package (`README.md`, `AGENTS.md`, `turbo.json`) through the `//#format:root` task.
 
@@ -176,6 +179,9 @@ cd apps/tanstack
 bun run typegen
 bun run migrate     # local D1 (migrate:remote for the deployed one)
 bun run deploy      # build, then wrangler deploy
+
+cd apps/nextjs
+bun run deploy      # vinext-cloudflare deploy (no typegen or migrate yet)
 ```
 
 </details>
@@ -211,11 +217,12 @@ Prettier can break types in this setup, so typecheck right after formatting.
 4. **Deploy each app.**
 
    ```bash
-   cd apps/server  && bun run deploy
+   cd apps/server   && bun run deploy
    cd apps/tanstack && bun run deploy
+   cd apps/nextjs   && bun run deploy
    ```
 
-Both dev servers read the root `.env`: `apps/server` passes `--env-file ../../.env`, and `apps/tanstack` sets Vite's `envDir` to the repo root.
+Both dev servers read the root `.env`: `apps/server` passes `--env-file ../../.env`, and `apps/tanstack` sets Vite's `envDir` to the repo root. `apps/nextjs` reads neither yet: `vite.config.ts` sets no `envDir`.
 
 ## How it fits together
 
@@ -267,20 +274,20 @@ Using the wrong one fails at build time, not at runtime. `packages/api` also nev
 @import "@acme/ui/globals.css";
 ```
 
-Tailwind scans from the app root, so classes inside `packages/*` are invisible and get dropped silently. Declare each package the app renders:
+Tailwind scans from the app root, so classes inside a workspace package are invisible and get dropped silently. Declare each package the app renders:
 
 ```css
 @source "../../../packages/ui/src";
 ```
 
-List packages one per line instead of globbing. A glob also pulls in CSS for components an app never renders. And note that a wildcard in a middle path segment (`packages/*/src`) matches nothing.
+Each package is listed rather than globbed: a glob over `packages/*` works, but a class in a package an app never renders still reaches the output, and two frontends sharing `packages/ui` would each ship CSS for components they never use. And note that a wildcard in a middle path segment (`packages/*/src`) matches nothing.
 
 </details>
 
 <details>
 <summary><b>One tsconfig per runtime</b></summary>
 
-Both apps use a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite.
+Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` runs `vite build` alone.
 
 | Extends                                | For                                                    |
 | -------------------------------------- | ------------------------------------------------------ |
@@ -299,7 +306,8 @@ A library that reads a Workers global overrides `types: ["@cloudflare/workers-ty
 
 - **Catalog:** `workspaces.catalog` in the root `package.json` pins prettier, typescript, eslint, react and their types. Reference them as `"catalog:"`.
 - **`routeTree.gen.ts`** is gitignored and rebuilt by `generate-routes`, which `build`, `lint` and `typecheck` depend on.
-- **`worker-configuration.d.ts`** is committed in each app, so a fresh clone typechecks against the bindings it will deploy. Re-run `bun run typegen` after editing that app's `wrangler.jsonc`.
+- **`worker-configuration.d.ts`** is committed in `apps/server` and `apps/tanstack`, so a fresh clone typechecks against the bindings it will deploy. Re-run `bun run typegen` after editing that app's `wrangler.jsonc`.
+- **`apps/nextjs` keeps its generated files out of git.** `next-env.d.ts`, `.next/`, `.vinext/` and `.cloudflare/` (build output, generated types and local miniflare state) are all gitignored.
 
 </details>
 
@@ -333,7 +341,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 > **Keep prettier on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments (`Promise<Response>` becomes `Promise`). `format` still reports success, so `typecheck` is what catches it.
 
 > [!WARNING]
-> **The two apps keep separate local D1 databases.** Each has its own `.wrangler/state`, so a note created in `apps/server` is invisible to `apps/tanstack` until deploy, where a shared `database_id` makes them one. Run `bun run migrate` in whichever app you are working in.
+> **The two Worker apps keep separate local D1 databases.** Each has its own `.wrangler/state`, so a note created in `apps/server` is invisible to `apps/tanstack` until deploy, where a shared `database_id` makes them one. Run `bun run migrate` in whichever app you are working in. `apps/nextjs` declares no D1 binding, so it has no local database at all.
 
 <details>
 <summary><b>More gotchas</b></summary>
