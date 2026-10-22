@@ -6,7 +6,7 @@
 Three deployable apps, one shared service layer, and a worked example that touches every layer.
 
 [![Bun](https://img.shields.io/badge/Bun-1.4.2-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
-[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.22.0-3c873a?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.23.4-3c873a?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Turborepo](https://img.shields.io/badge/Turborepo-2-ef4444?style=flat-square&logo=turborepo&logoColor=white)](https://turborepo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
@@ -90,7 +90,7 @@ Every request path ends at the same core service, so changing the service change
 ### Requirements
 
 - **[Bun](https://bun.sh) 1.4.2.** This is the only supported package manager.
-- **Node 22.22.0 or newer** (or Bun itself) to run the tests. Each `vitest.config.ts` imports `@acme/vitest` as TypeScript source, and Node needs type-stripping support to load it.
+- **Node 22.23.4 or newer** (or Bun itself) to run the tests. Each `vitest.config.ts` imports `@acme/vitest` as TypeScript source, and Node needs type-stripping support to load it.
 - **A Cloudflare account**, only when you deploy. Local dev runs in miniflare.
 
 ### Install and run
