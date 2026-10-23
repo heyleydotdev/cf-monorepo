@@ -5,7 +5,7 @@
 **A Bun + Turborepo boilerplate for Cloudflare Workers.**
 Three deployable apps, one shared service layer, and a worked example that touches every layer.
 
-[![Bun](https://img.shields.io/badge/Bun-1.4.2-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
+[![Bun](https://img.shields.io/badge/Bun-1.4.4-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.23.4-3c873a?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Turborepo](https://img.shields.io/badge/Turborepo-2-ef4444?style=flat-square&logo=turborepo&logoColor=white)](https://turborepo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -89,7 +89,7 @@ Every request path ends at the same core service, so changing the service change
 
 ### Requirements
 
-- **[Bun](https://bun.sh) 1.4.2.** This is the only supported package manager.
+- **[Bun](https://bun.sh) 1.4.4.** This is the only supported package manager.
 - **Node 22.23.4 or newer** (or Bun itself) to run the tests. Each `vitest.config.ts` imports `@acme/vitest` as TypeScript source, and Node needs type-stripping support to load it.
 - **A Cloudflare account**, only when you deploy. Local dev runs in miniflare.
 
@@ -233,7 +233,7 @@ Each dev server reads the root `.env`: `apps/server` passes `--env-file ../../.e
 <details open>
 <summary><b>Packages ship source, not a build</b></summary>
 
-Every package maps `types` and `default` to the same `src/*.ts` path, so nothing is compiled and there is no `dist`. `tsc` reads dependency source directly and the bundler does the rest.
+Every package maps `types` and `default` to the same `src/*.ts` path, so nothing is compiled and there is no `dist`. TypeScript reads dependency source directly and the bundler does the rest.
 
 </details>
 
@@ -291,7 +291,7 @@ Each package is listed rather than globbed: a glob over `packages/*` works, but 
 <details>
 <summary><b>One tsconfig per runtime</b></summary>
 
-Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `apps/tanstack` builds with `tsc -b`, which walks the references, then Vite; `apps/nextjs` builds with `vite build` alone and typechecks its three references with `tsc --noEmit -p`.
+Each app uses a root tsconfig with project references and nothing else, so each file compiles under the types it actually runs with. `typecheck` and TanStack's build both run `bun check -b`, which follows the references and checks them without building; `apps/tanstack` then runs Vite, and `apps/nextjs` builds with `vite build` alone.
 
 | Extends                                | For                                                    |
 | -------------------------------------- | ------------------------------------------------------ |
@@ -350,6 +350,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 <details>
 <summary><b>More gotchas</b></summary>
 
+- **`bun check` uses its own TypeScript, not the workspace's.** Bun 1.4.4 bundles 7.0.2, while `typescript` stays 5.9.3 for the editor and ESLint; both accept the tree today, but trust `bun run typecheck` in CI.
 - **`env` is a throwing proxy during `vite build`.** vinext prerenders every route (`prerender: { routes: "*" }`), and in that phase `cloudflare:workers`' `env` throws on any access, so a module that reads a binding at import time fails the build. `apps/nextjs` reads `env.DB` per call in `getRpcServer()`, and a D1-backed page sets `export const dynamic = "force-dynamic"` — without it vinext catches the throw and leaves the route unclassified.
 - **`apps/nextjs` needs its `postcss.config.js`.** vinext only reads an existing postcss config and never synthesizes one, so deleting it inlines `@import "tailwindcss"` verbatim: theme tokens appear, every utility class is missing, and nothing errors.
 - **`apps/nextjs`'s test worker restates its bindings.** The Vitest plugin cannot load `cloudflare.config.ts` under Bun, so `vitest.config.ts` declares `DB` through inline `miniflare` options. Its compatibility date trails the app's because the pool pins an older workerd. The suite calls the actions and the route module directly, so it does not exercise the Worker entry or prove the binding name in the app config.

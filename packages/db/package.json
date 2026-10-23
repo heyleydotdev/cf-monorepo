@@ -13,7 +13,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check --no-script",
     "lint": "eslint .",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore",

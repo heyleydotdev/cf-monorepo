@@ -10,7 +10,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check --no-script",
     "lint": "eslint .",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore"

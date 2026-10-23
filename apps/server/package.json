@@ -16,7 +16,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.test.json"
+    "typecheck": "bun check -b --no-script"
   },
   "dependencies": {
     "@acme/api": "workspace:*"

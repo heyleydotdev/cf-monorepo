@@ -13,7 +13,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 
 ## Package Manager
 
-**bun 1.4.2** (`bun.lock`). Never npm, yarn, or pnpm. Shared versions live in the root `workspaces.catalog`; reference them as `"catalog:"`.
+**bun 1.4.4** (`bun.lock`). Never npm, yarn, or pnpm. Shared versions live in the root `workspaces.catalog`; reference them as `"catalog:"`.
 
 ## Commands
 
@@ -52,6 +52,7 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 - **`apps/server` and `apps/tanstack` each have a committed `worker-configuration.d.ts`** from `bun run typegen`. Re-run typegen after touching that app's `wrangler.jsonc`, commit the result, and keep the file in the app's tsconfig `include` or its bindings do not resolve. `apps/nextjs` has no `typegen` script and no committed types yet: it declares its Worker in `cloudflare.config.ts`, not `wrangler.jsonc`.
 - Each app's root tsconfig uses project references, so `eslint.config.js` must list every referenced tsconfig in `parserOptions.project`.
 - `typecheck` waits on `typecheck-transit`, not `^typecheck`, so a dependency change invalidates a dependent without serializing every package first.
+- `typecheck` is `bun check -b --no-script` in the apps and `bun check --no-script` in packages; TanStack's `build` runs the app check again before Vite. Bun's checker is TypeScript 7.0.2, not the 5.9.3 the editor and ESLint use.
 - A new public env var needs an `ImportMetaEnv` entry in `apps/tanstack/src/env.d.ts` and nothing in `turbo.json`; `apps/nextjs` follows Next instead, inlining `NEXT_PUBLIC_*` from the same root `.env`.
 - Root files are formatted by the `//#format:root` task. A new root file type means a new glob in `turbo.json` and in both `format:root` scripts; the globs skip `bun.lock` and `.env.example` on purpose.
 - `packages/api` keeps `router` a concrete const: `restHandler` (REST) and `rpcHandler` (RPC) infer from it, as do the OpenAPI document and `createRpcServer`. A factory return type loses the procedure literals and infers `unknown`.

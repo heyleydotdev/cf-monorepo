@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.test.json",
+    "typecheck": "bun check -b --no-script",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "format:write": "prettier --write . --ignore-path ../../.gitignore"
   },
