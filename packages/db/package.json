@@ -15,8 +15,8 @@
   "scripts": {
     "typecheck": "bun check --no-script",
     "lint": "eslint .",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
-    "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "format": "bun fmt --check --no-script . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "format:write": "bun fmt --no-script . --ignore-path ../../.gitignore --ignore-path .prettierignore",
     "generate": "drizzle-kit generate"
   },
   "dependencies": {

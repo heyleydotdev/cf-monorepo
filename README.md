@@ -30,7 +30,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 - **Opinionated wiring, not opinionated frameworks.** The tooling is stable. The notes example is here to be deleted.
 - **One service layer, three ways in.** The same oRPC router serves REST, RPC, and in-process calls, so behavior never drifts between them.
 - **Zero-build packages.** Packages ship TypeScript source. There is no `dist`, no watch mode for libraries, and no stale builds.
-- **One dialect everywhere.** Shared tsconfig, ESLint, Prettier and Vitest packages keep every workspace consistent.
+- **One dialect everywhere.** Shared tsconfig, ESLint, formatter and Vitest packages keep every workspace consistent.
 - **Cloudflare-native.** Local dev runs in miniflare, with D1, Wrangler types and the Workers test pool all set up.
 
 ## Tech stack
@@ -42,7 +42,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 | API                  | oRPC (REST via OpenAPI adapter, plus native RPC), Zod                       |
 | Database             | Drizzle ORM on D1                                                           |
 | Frontend             | TanStack Start (React SSR), vinext (Next.js on Vite), Tailwind 4, shadcn/ui |
-| Quality              | TypeScript, ESLint, Prettier, Vitest (Workers runtime)                      |
+| Quality              | TypeScript, ESLint, Bun formatter, Vitest (Workers runtime)                 |
 
 ## Workspaces
 
@@ -55,7 +55,7 @@ Setting up a Workers monorepo means wiring the same things every time: shared Ty
 | [`packages/core`](packages/core) | Transport-agnostic logic: the notes service, Zod schemas and shared helpers.                                                                                 |
 | [`packages/db`](packages/db)     | Drizzle on D1. Typed client and schema, plus migration generation.                                                                                           |
 | [`packages/ui`](packages/ui)     | React components and the shared Tailwind theme. React is a peer dependency.                                                                                  |
-| [`tooling/*`](tooling)           | Shared tsconfig, ESLint, Prettier and Vitest configs, published internally as `@acme/*`.                                                                     |
+| [`tooling/*`](tooling)           | Shared tsconfig, ESLint, Prettier-compatible formatter and Vitest configs, published internally as `@acme/*`.                                                |
 
 > [!NOTE]
 > Only three apps ship today. Adding another is a copy-and-rename job, see [Adding a workspace](#adding-a-workspace).
@@ -196,7 +196,7 @@ bun run deploy      # vinext-cloudflare deploy (no typegen yet)
 bun run format && bun run typecheck && bun run test && bun run lint
 ```
 
-Prettier can break types in this setup, so typecheck right after formatting.
+`bun run format` uses `bun fmt`, which reads the shared Prettier config. Formatting can break types in this setup, so typecheck right after it.
 
 ## Deploying
 
@@ -327,7 +327,7 @@ packages/<name>/
 └── src/index.ts
 ```
 
-Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its own `devDependencies`.
+Every workspace also needs `"prettier": "@acme/prettier"` and `prettier` in its own `devDependencies` for editor support; the `format` scripts use `bun fmt`.
 
 ## Making it yours
 
@@ -342,7 +342,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 > **Use `bun run test`, never `bun test`.** Bun's own runner ignores `vitest.config.ts`, so the Workers pool and `cloudflare:test` imports do not exist and every spec fails to import. A root `bunx vitest` is the other trap: with no vitest at the root, bunx fetches the registry's latest major instead of the workspace's `catalog:` pin. Run tests through Turbo or from the app directory.
 
 > [!CAUTION]
-> **Keep prettier on 3.5 or newer.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments (`Promise<Response>` becomes `Promise`). `format` still reports success, so `typecheck` is what catches it.
+> **Keep prettier on 3.5 or newer for editor support.** Below that, `@ianvs/prettier-plugin-sort-imports` silently drops type arguments (`Promise<Response>` becomes `Promise`). The `format` scripts use `bun fmt`, but an editor's Prettier integration still loads the plugin, so `typecheck` is what catches it.
 
 > [!WARNING]
 > **Each app keeps its own local D1 database.** `apps/server` and `apps/tanstack` write to `.wrangler/state`, and `apps/nextjs` to `.cloudflare/state`, so a note created in one app is invisible to the others until deploy, where all three share the `acme-db` database. `bun run migrate` applies `packages/db/migrations` to the app you run it in; in `apps/nextjs` it passes the binding's id and `--persist-to .cloudflare/state` so `cf` opens the dev server's database instead of an empty one.
@@ -359,7 +359,7 @@ Every workspace also needs `"prettier": "@acme/prettier"` and prettier in its ow
 - **`dev.port` must be a number** in `wrangler.jsonc`. The string form is rejected by `wrangler types`.
 - **Public env vars use the `VITE_` prefix.** That matches what Turbo hashes automatically, so no `env` entry is needed in `turbo.json`. Add a typed entry to `ImportMetaEnv` in `apps/tanstack/src/env.d.ts`. Do not override `envPrefix`.
 - **`VITE_` vars are build-time.** Vite compiles them into the bundles, so they cannot hold a value the Worker needs at request time. Use a binding or a secret for those.
-- **Line endings.** `.gitattributes` forces LF. Without it, a Windows checkout with `core.autocrlf=true` produces CRLF files that Prettier rejects.
+- **Line endings.** `.gitattributes` forces LF. Without it, a Windows checkout with `core.autocrlf=true` produces CRLF files that `bun fmt` rejects.
 - **`wrangler types` noise.** It can emit unused `eslint-disable` directives into `worker-configuration.d.ts`. They are warnings, not errors.
 - **`bun run clean`** runs `git clean -xdf`, so it only works inside a git checkout.
 - **ESLint and project references.** Each app's `eslint.config.js` must list every referenced tsconfig in `parserOptions.project`.

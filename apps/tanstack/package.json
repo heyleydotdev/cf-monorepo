@@ -16,8 +16,8 @@
     "migrate:remote": "wrangler d1 migrations apply acme-db --remote",
     "lint": "eslint .",
     "typecheck": "bun check -b --no-script",
-    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
-    "format:write": "prettier --write . --ignore-path ../../.gitignore --ignore-path .prettierignore"
+    "format": "bun fmt --check --no-script . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+    "format:write": "bun fmt --no-script . --ignore-path ../../.gitignore --ignore-path .prettierignore"
   },
   "dependencies": {
     "@acme/api": "workspace:*",

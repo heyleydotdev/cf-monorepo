@@ -12,8 +12,8 @@
   "scripts": {
     "typecheck": "bun check --no-script",
     "lint": "eslint .",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "format:write": "prettier --write . --ignore-path ../../.gitignore"
+    "format": "bun fmt --check --no-script . --ignore-path ../../.gitignore",
+    "format:write": "bun fmt --no-script . --ignore-path ../../.gitignore"
   },
   "dependencies": {
     "@acme/db": "workspace:*",

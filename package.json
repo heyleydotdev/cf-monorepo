@@ -42,8 +42,8 @@
     "test": "turbo run test",
     "format": "turbo run format format:root",
     "format:write": "turbo run format:write format:write:root",
-    "format:root": "prettier --check \"*.md\" \"*.json\" \".vscode/*.json\"",
-    "format:write:root": "prettier --write \"*.md\" \"*.json\" \".vscode/*.json\""
+    "format:root": "bun fmt --check --no-script \"*.md\" \"*.json\" \".vscode/*.json\"",
+    "format:write:root": "bun fmt --no-script \"*.md\" \"*.json\" \".vscode/*.json\""
   },
   "devEngines": {
     "packageManager": {
